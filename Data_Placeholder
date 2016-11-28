@@ -1,0 +1,50 @@
+<div class="row">
+  
+  <div class="col-md-9">
+  
+  <div class="panel panel-info">
+  
+    <div class="panel-heading">
+    
+      <h4 class="panel-title"><span class="glyphicon glyphicon-check" style="padding-right: 0.6em;"></span>Data from Form</h4>
+  							
+    </div>
+  	
+    <div class="panel-body">
+  
+      <!-- Example Field 1 --><!-- Text input-->
+      <div class="form-group">
+        <label class="col-md-3 control-label" for="example_field_1">Example Text</label>  
+        <div class="col-md-9">
+          <input id="example_field_1" name="example_field_1" type="text" placeholder="Example Data Here" class="form-control input-md" readonly="readonly" disabled="disabled" />
+          <i class="form-control-feedback glyphicon glyphicon-lock pad-right-more"></i>
+          <span class="help-block">Simple data from the <strong>Previous Step</strong>/s will appear here</span>
+        </div>
+      </div>
+      
+      <!-- Example Field 2 --><!-- Mutli-Line Text input-->
+      <div class="form-group">
+        <label class="col-md-3 control-label" for="example_field_2">Example Comments</label>  
+        <div class="col-md-9">
+          <textarea id="example_field_2" name="example_field_2"class="form-control input-md resizable" rows="4" readonly="readonly" disabled="disabled"></textarea>
+          <i class="form-control-feedback glyphicon glyphicon-lock pad-right-more"></i>
+          <span class="help-block">More complex data from the <strong>Previous Step</strong>/s will appear here</span>
+        </div>
+      </div>
+      
+      <!-- Example Field 3 --><!-- Text input-->
+      <div class="form-group">
+        <label class="col-md-3 control-label" for="example_field_3">Submitted / Authorised By</label>  
+        <div class="col-md-9">
+          <input id="example_field_3" name="example_field_3" type="text" placeholder="A Person" class="form-control input-md" readonly="readonly" disabled="disabled" />
+          <i class="form-control-feedback glyphicon glyphicon-lock pad-right-more"></i>
+        </div>
+      </div>
+              
+    </div>
+  
+  </div>
+  
+  </div>
+  
+</div>

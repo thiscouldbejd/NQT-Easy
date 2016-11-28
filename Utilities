@@ -1,0 +1,40 @@
+function getDriveId(id) {
+  if (id && id.indexOf("https://") == 0) id = id.match(/[-\w]{25,}/);
+  return id;
+}
+
+var illegal_chars = ["+", "-", "/", "\\", "-", "&", "="];
+                     
+function generateCode(max_length, seed, min_length) {
+  
+  if (!min_length) min_length = 12;
+  
+  if (seed && seed.length > 0) {
+    seed = seed + "_" + moment().toISOString();
+  } else {
+    seed = moment().toISOString();
+  }
+  
+  var hmac = Utilities.base64Encode(Utilities.computeHmacSignature(Utilities.MacAlgorithm.HMAC_SHA_512, Math.uuid(32), seed, Utilities.Charset.UTF_8));
+
+  var digest = Utilities.base64Encode(Utilities.computeDigest(Utilities.DigestAlgorithm.MD5, hmac, Utilities.Charset.UTF_8));
+
+  illegal_chars.forEach(function(char, index) {
+    while (digest.indexOf(char) >= 0) {
+      digest = digest.replace(char, "")
+    }
+  });
+  
+  /*
+  while (digest.substr(0, 1) == "+" || digest.substr(0, 1) == "=" | digest.substr(0, 1) == "-" | digest.substr(0, 1) == "&") {
+    digest = digest.substr(1);
+  }
+  */
+    
+  if (digest.length > max_length) digest = digest.substr(0, max_length);
+  
+  if (digest.length < min_length) return  generateCode(max_length, seed, min_length);
+  
+  return digest;
+  
+}

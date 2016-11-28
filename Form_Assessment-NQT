@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html>
+
+  <head>
+    <base target="_top">
+    
+    <!-- Meta -->
+    <meta name="description" content="">
+    <title></title>
+            
+    <!-- Shared Head -->
+    <?!= HtmlService.createHtmlOutputFromFile("Form_Head").getContent(); ?>
+    
+    <!-- Standards -->
+    <?!= HtmlService.createHtmlOutputFromFile("Standards.js").getContent(); ?>
+    
+    <!-- Page Javascript/s -->
+    <?!= HtmlService.createHtmlOutputFromFile("Spin.js").getContent(); ?>
+    <?!= HtmlService.createHtmlOutputFromFile("Form.js").getContent(); ?>
+    <?!= HtmlService.createHtmlOutputFromFile("Form_Assessment.js").getContent(); ?>
+    <?!= HtmlService.createHtmlOutputFromFile("Form_Assessment-Mentor.js").getContent(); ?>
+
+    <!-- Page Stylesheet/s -->
+    <?!= HtmlService.createHtmlOutputFromFile("Material_Stylesheet.css").getContent(); ?>
+    <?!= HtmlService.createHtmlOutputFromFile("Form_Stylesheet.css").getContent(); ?>
+    
+  </head>
+  
+  <body>
+    
+    <div class="container-fluid">
+
+	  <div class="row">
+			
+        <!-- Sidebar -->
+        <div class="col-md-3">
+
+		  <h1><?= Title ?></h1>
+          <div id="description" class="alert alert-info alert-dismissible" role="alert" style="display: none;">
+            <button type="button" class="close" data-dismiss="alert" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+            <p><?= Description ?></p>
+          </div>
+          
+          <!-- Data Passing from Server -->
+          <!-- Annoying that this has to be in each HTML Form, rather than an import! -->
+          <div id="__data_display" style="display: none;"><?= Display ?></div>
+          <div id="__data_populate" style="display: none;"><?= Populate ?></div>
+          <div id="__data_token" style="display: none;"><?= Token ?></div>
+          <div id="__data_organisation" style="display: none;"><?= Organisation ?></div>
+          <div id="__data_user" style="display: none;"><?= User ?></div>
+          <div id="__data_defaults" style="display: none;"><?= Defaults ?></div>
+          <div id="__data_status" style="display: none;"><?= Status ?></div>
+          <div id="__data_debug" style="display: none;"><?= Debug ?></div>
+			
+        </div>
+
+        <div class="content col-md-9">
+        
+          <form id="ASSESSMENT_NQT" class="form-horizontal" role="form">
+          
+            <!-- Shared Prologue -->
+            <?!= HtmlService.createHtmlOutputFromFile("Form_Prologue").getContent(); ?>
+          
+            <!-- Shared Data Placeholder -->
+            <?!= HtmlService.createHtmlOutputFromFile("Form_Previous").getContent(); ?>
+            
+            <fieldset class="data">
+             
+              <!-- Discussion Confirmation --><!-- Checkbox input-->
+              <div class="form-group">
+                <label class="col-md-3 control-label" for="nqt_discussionConfirmation">Confirmation of Discussion</label> 
+                <div class="col-md-6">
+                  <div class="input-group">
+                    <span class="input-group-addon">
+                      <input id="nqt_discussionConfirmation" name="nqt_discussionConfirmation" type="checkbox" aria-label="Confirmation of Support" required="required" data-field="Support Confirmed" data-target="nqt_discussionDeclaration" data-value="I confirm that I have discussed the above report with my Mentor" data-order="1">
+                    </span>
+                    <textarea id="nqt_discussionDeclaration" name="nqt_discussionDeclaration" class="form-control resizable" aria-label="Declaration of Discussion" readonly="readonly" data-field="Discussion Statement" rows="1" data-display="true" data-order="2"></textarea>
+                  </div>
+                  <span class="help-block">Please <strong>confirm</strong> that you have held a discussion with your mentor about the information in this assessment report.</span>  
+                </div>
+              </div>
+
+		      <!-- Further Comments --><!-- Mutli-Line Text input-->
+              <div class="form-group">
+                <label class="col-md-3 control-label" for="nqt_furtherComments">Further Comments</label>
+                <div class="col-md-6">
+                  <textarea id="nqt_furtherComments" name="nqt_furtherComments"class="form-control input-md resizable optional" rows="3" data-field="Further Comments" data-display="true" data-order="3" ></textarea>
+                  <span class="help-block">Optional</span>  
+                </div>
+              </div>
+            
+            </fieldset>
+
+            <!-- Shared Epilogue -->
+            <?!= HtmlService.createHtmlOutputFromFile("Form_Epilogue").getContent(); ?>
+    
+          </form>
+          
+        </div>
+    
+      </div>
+    
+    </div>
+    
+  </body>
+  
+</html>

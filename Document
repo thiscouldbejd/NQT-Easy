@@ -1,0 +1,140 @@
+function generateDocument(template, folder, data, name) {
+  
+  var _doc = template.makeCopy(folder).setName(name);
+  _doc = DocumentApp.openById(_doc.getId());
+  
+  Object.keys(data).map(function(key) {
+    _doc = _docRegex(_doc, null, data[key], key);
+  });
+ 
+    // Remove all Un-Used Tags
+  _doc.getBody().replaceText("{{.*}}", "");
+  
+  return _doc;
+  
+}
+
+// == Templating Google Apps Script Code == //
+
+// -- General Variables -- //
+var REGEX_METAS = ["\\","^","$",".","|","?","*","+","(",")","[","{"];
+// -- General Variables -- //
+
+
+// -- General Methods -- //
+function _safeRegex_(text) {
+  for (var i = 0; i < REGEX_METAS.length; ++i) {
+    var replace = "\\" + REGEX_METAS[i];
+    var regEx = new RegExp(replace,"g");
+    text = text.replace(regEx, replace);
+  }
+  return text;
+}
+// -- General Methods -- //
+
+
+// -- Text Methods -- //
+
+/**
+* Generates Merged/Templated Text from Template Document Id (using {{field}} notation).
+*
+* @param {string} the template document id to use
+* @param {string} the prefix value
+* @param {object} the data value
+* @param {string} the prefix
+* @return {string} the templated text
+*/
+function _templateRegex_FromId(id, prefix_Value, value, prefix) {
+  var doc = DocumentApp.openById(id);
+  if (doc) {
+    var text = doc.getBody().getText();
+    return _templateRegex(text, prefix_Value, value, prefix);
+  } else {
+    return null;
+  }
+}
+
+/**
+* Generates Merged/Templated Text from Template Text (using {{field}} notation).
+*
+* @param {string} the template text to use
+* @param {string} the prefix value
+* @param {object} the data value
+* @param {string} the prefix
+* @return {string} the templated text
+*/
+function _templateRegex(text, prefix_Value, value, prefix) {
+
+  if (prefix && prefix !== "") prefix = prefix + ".";
+  var value_Keys = Object.keys(value);
+       
+  for (var i = 0; i < value_Keys.length; i++) {
+       
+    var regEx;
+    
+    if (prefix_Value) {
+      regEx = new RegExp(_safeRegex_("{{" + prefix + prefix_Value[value_Keys[i]] + "}}"),"gi");
+    } else {
+      regEx = new RegExp(_safeRegex_("{{" + prefix + value_Keys[i] + "}}"),"gi");
+    }
+    text = text.replace(regEx, value[value_Keys[i]]);
+
+  }
+  
+  return text;
+       
+}
+// -- Text Methods -- //
+
+
+// -- Document Methods -- //
+/**
+* Generates Merged/Templated Document from Template Document Id (using {{field}} notation).
+*
+* @param {string} the template/initial document id to use (this document will be modified)
+* @param {string} the prefix value
+* @param {object} the data value
+* @param {string} the prefix
+* @return {document} the templated document
+*/
+function _docRegex_FromId(id, prefix_Value, value, prefix) {
+  var doc = DocumentApp.openById(id);
+  if (doc) {
+    return _docRegex(doc, prefix_Value, value, prefix);
+  } else {
+    return null;
+  }
+}
+
+/**
+* Generates Merged/Templated Document from Template Document (using {{field}} notation).
+*
+* @param {document} the template/initial document to use (this document will be modified)
+* @param {string} the prefix value
+* @param {object} the data value
+* @param {string} the prefix
+* @return {document} the templated document
+*/
+function _docRegex(doc, prefix_Value, value, prefix) {
+
+  if (prefix && prefix !== "") prefix = prefix + ".";
+  var value_Keys = Object.keys(value);
+  var doc_Body = doc.getBody();
+  
+  for (var i = 0; i < value_Keys.length; i++) {
+       
+    var replace;
+    
+    if (prefix_Value) {
+      replace = _safeRegex_("{{" + prefix + prefix_Value[value_Keys[i]] + "}}");
+    } else {
+      replace = _safeRegex_("{{" + prefix + value_Keys[i] + "}}");
+    }
+    doc_Body.replaceText(replace, value[value_Keys[i]]);
+    
+  }
+  
+  return doc;
+  
+}
+// -- Document Methods -- //

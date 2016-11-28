@@ -1,0 +1,159 @@
+// -- Coded Configuration -- //
+var __config = {
+  APPLICATION : "NQT Easy",
+  SHEETS : {
+    ENTITIES : "Schools",
+    SUBJECTS : "NQTs",
+    CONFIG : "Config",
+  },
+  FORMS : {
+    REGISTER_NQT : {
+      Name : "Form_Registration",
+      Title : "Register an NQT",
+      Description : "Please enter the basic details about the NQT that you are registering.",
+    },
+    ASSESSMENT_MENTOR : {
+      Name : "Form_Assessment-Mentor",
+      Title : "Assess NQT",
+      Description : "Please assess the progress of the NQT over this assessment period.",
+    },
+    ASSESSMENT_NQT : {
+      Name : "Form_Assessment-NQT",
+      Title : "NQT Comments",
+      Description : "Please review the assessment made, and add any further comments.",
+    },
+    ASSESSMENT_OVERSIGHT : {
+      Name : "Form_Assessment-Oversight",
+      Title : "Confirm NQT Assessment",
+      Description : "Please review the NQT Assessment, and comments, before affirming your agreement with the recommendation.",
+    },
+  },
+  EMAILS : {
+    STEP : {
+      Name : "Email_Step",
+      Subject : "NQT Assessment form for: %s",
+    },
+    REJECT : {
+      Name : "Email_Reject",
+      Subject : "Form Rejected for: %s",
+    },
+    COMPLETE : {
+      Name : "Email_Complete",
+      Subject : "Cycle Completed for: %s",
+    },
+    SUMMARY : {
+      Name : "Email_Summary",
+      Subject : "Step Summary for: %s",
+    },
+  },
+  ERRORS : {
+    NO_PARAM : {
+      Number : 601,
+      Name : "Missing Parameters",
+    },
+    INVALID_PARAM : {
+      Number : 602,
+      Name : "Invalid Parameters",
+    },
+    INVALID_ACTION : {
+      Number : 603,
+      Name : "Invalid Action",
+    },
+    INVALID_ENTITY : {
+      Number : 604,
+      Name : "Invalid Entity",
+    },
+    INVALID_SUBJECT : {
+      Number : 605,
+      Name : "Invalid Subject",
+    },
+    INVALID_FORM : {
+      Number : 606,
+      Name : "Invalid Form",
+    },
+    PROCESS_ALREADY_RUN : {
+      Number : 607,
+      Name : "Process has already been run",
+    },
+    MISSING_DESTINATION : {
+      Number : 608,
+      Name : "Missing / Invalid Destination",
+    },
+  }
+}
+
+// -- Loaded Configuration -- //
+var config = function(force_reload) {
+
+  // -- Grab Cache -- //
+  var _cache = CacheService.getScriptCache();
+  
+  var _config = _cache.get("CONFIG");
+  
+  if (force_reload || !_config) {
+  
+    _config = {};
+    
+    var prop_Key = __config.APPLICATION.split(" ").join("_").toUpperCase();
+    var prop_Value = "MASTER_DB";
+    
+    var _queryVal = "mimeType = 'application/vnd.google-apps.spreadsheet' and trashed != true and properties has { key='" +
+      prop_Key + "' and value='" + prop_Value + "' and visibility='PUBLIC' }";
+    
+    var _query = Drive.Files.list({orderBy : "title", q : _queryVal});
+    var _results = _query.items;
+  
+    if (_results && _results.length > 0) {
+      try {
+        var _config_Sheet = SpreadsheetApp.openById(_results[0].id).getSheetByName(__config.SHEETS.CONFIG);
+        if (_config_Sheet) _config.DATABASES = {MASTER : _results[0].id};
+        var _config_Values = _config_Sheet.getRange(1, 1 ,_config_Sheet.getLastRow(), _config_Sheet.getLastColumn()).getValues();
+        for (var i = 1; i < _config_Values.length; i++) {
+          if (_config_Values[i][0]) {
+            _config[_config_Values[i][0]] = _config_Values[i][1];
+          }
+        }
+      } catch(err) {
+      }
+    }
+    
+  } else {
+  
+    // Cache HIT, so re-hydrate JSON object from 
+    _config = JSON.parse(_config);
+    
+  }
+  
+  _cache.put("CONFIG", JSON.stringify(_config), 21600);
+  
+  Object.keys(__config).map(function (key) {
+    _config[key] = __config[key];
+  });
+  
+  return _config
+}
+
+function setMasterDB(id) {
+  
+  if (id) {
+    
+    var prop_Key = __config.APPLICATION.split(" ").join("_").toUpperCase();
+    var prop_Value = "MASTER_DB";
+    
+    var _queryVal = "mimeType = 'application/vnd.google-apps.spreadsheet' and trashed != true and properties has { key='" +
+      prop_Key + "' and value='" + prop_Value + "' and visibility='PUBLIC' }";
+    
+    var _query = Drive.Files.list({orderBy : "title", q : _queryVal});
+    var _results = _query.items;
+  
+    if (_results && _results.length > 0) {
+      for (var i = 0; i < _results.length; i++) {
+        Objects().fetch(_results[i].id).deleteProperty(prop_Key);
+      }
+    }
+       
+    var _data_Obj = Objects().fetch(id);
+    _data_Obj.setProperty(prop_Key, prop_Value, _data_Obj.Property_Visibility.PUBLIC);
+  }
+
+}

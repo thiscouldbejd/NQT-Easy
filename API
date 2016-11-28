@@ -1,0 +1,362 @@
+// == LOAD FORM DATA == //
+function load_form(token, organisation) {
+  
+  var _config = config();
+  var _log = getSingleSheet(_config.DATABASES.MASTER, organisation);
+  var _row = getMatchingRow(_log, "TOKEN", token);
+  if (_row) {
+    
+    var _ret = {};
+    
+    if (_row["FORM FROM"]) {
+      
+      _ret.Previous = [];
+      var _finished = false;
+      
+      Object.keys(_config.FORMS).map(function(key) {
+        
+        if (!_finished && key != _row["FORM TO"]) {
+          
+          var _form = __config.FORMS[key];
+          var _data = hydrate_data(_row.ID, key, _row.NQT, organisation, _config, true);
+          if (_data) _ret.Previous.push({Key : key, Name : _form.Name, Title : _form.Title, Data : _data});
+          if (key == _row["FORM FROM"]) _finished = true;
+        
+        }
+        
+      });
+        
+    }
+    
+    _ret.Current = hydrate_data(_row.ID, _row["FORM TO"], _row.NQT, organisation, _config);
+    
+    return _ret;
+    
+  }
+  
+  return;
+  
+}
+// == LOAD FORM DATA == //
+
+
+
+
+// == SAVE FORM DATA == //
+function save_form(token, organisation, object) {
+  
+  var _config = config();
+  var _log = getSingleSheet(_config.DATABASES.MASTER, organisation);
+  var _row = getMatchingRow(_log, "TOKEN", token);
+  if (_row) {
+    var _db = get_form_db(_row.ID, _row["FORM TO"], _row.NQT, organisation, _config, true)
+    if (_db) {
+    
+      // -- Clear & Colour Sheet -- //
+      _db.getParent().getSheets().forEach(function(sheet, index) {sheet.setTabColor(null)});
+      _db.clear().setTabColor("#00ff00");
+      
+      // -- Create Default Headers and Values -- //
+      var _headers = [COL_KEY, COL_FIELD, COL_VALUE, COL_ORDER];
+      var _values = [
+        {
+          "Key" : "STAMPED",
+          "Field" : "Stamped",
+          "Value" : new Date(),
+          "Order" : -10,
+          "Display" : true,
+        }
+      ];
+  
+      // -- Populate Object for Each Field and Push into Array -- //
+      Object.keys(object).forEach(function(key, index) {
+    
+        if (key && object[key].Field && object[key].Value) {
+      
+          var _object = object[key];
+      
+          var _value = {Key : key, Field : _object.Field, Value : _object.Value, Order : typeof _object.Order == "string" ? parseInt(_object.Order, 10) : _object.Order};
+      
+          Object.keys(_object).forEach(function(_key, _index) {
+        
+            if (_key && _key !== COL_KEY && _key !== COL_FIELD && _key !== COL_VALUE && _key !== COL_ORDER && _object[_key]) {
+              _value[_key] = _object[_key];
+              if (_headers.indexOf(_key) < 0) _headers.push(_key);
+            }
+        
+          });
+      
+          _values.push(_value);
+      
+        }
+    
+      });
+  
+      // -- Sort the Array by Order -- //
+      _values = _values.sort(function(a, b) {return a.Order - b.Order});  
+  
+      // -- Add the Data to the Sheet -- //
+      _db.appendRow(_headers);
+  
+      for (var i = 0; i < _values.length; i++) {
+        var _row = [];
+        for (var j = 0; j < _headers.length; j++) {
+          if (_values[i][_headers[j]]) {
+            _row.push(JSON.stringify(_values[i][_headers[j]])); 
+          } else {
+            _row.push(""); 
+          }
+        }
+        _db.appendRow(_row);
+      }
+
+    
+      // -- Format Spreadsheet -- //
+      var _max = _db.getLastColumn();
+      var _wrap = false;
+      for (var i = 1; i <= _max; i++) {
+        var _size = _db.autoResizeColumn(i).getColumnWidth(i) + 5;
+        if (_size > 400) {
+          _size = 400;
+          _wrap = true;
+        }
+        _db.setColumnWidth(i, _size);
+      }
+      _db.getRange(1, 1, 1, _max).setBackground("black").setFontColor("white").setFontWeight("bold");
+      if (_wrap) _db.getRange(1, 1, _db.getLastRow(), _max).setWrap(true);
+      return true;
+      
+    }
+    
+  }
+  
+  return false;
+  
+}
+// == SAVE FORM DATA == //
+
+
+
+
+// == SUBMIT FORM DATA == //
+function submit_form(token, organisation, __user, _next, object) {
+  
+  var _save = save_form(token, organisation, object);
+  if (_save !== true) return _save;
+  
+  // Submit Form
+  var _config = config();
+  
+  var _log = getSingleSheet(_config.DATABASES.MASTER, organisation);
+  
+  var _row = getMatchingRow(_log, "TOKEN", token);
+  
+  if (_row) {
+    
+    _log.getRange(_row.__ROW, getHeader(_log, "ACTION")).setValue("COMPLETED");
+    
+    var _token = generateCode(25, _row.ID);
+    var _url = _config.URL + "?t=" + encodeURIComponent(_token) +
+      "&o=" + encodeURIComponent(organisation);
+    
+    var _form = _row["FORM TO"];
+    var _nextForm;
+    
+    var _forms = Object.keys(_config.FORMS);
+    
+    for (var i = 0; i < _forms.length; i++) {
+      if (_forms[i] == _form && i < (_forms.length - 1)) {
+        _nextForm = _forms[i + 1];
+        break;
+      }
+    }
+    
+    if (_nextForm) {
+      
+      // SEND EMAIL STEP
+      notifyStep({
+        To : _next,
+        From : __user,
+        Subject : _row.NQT,
+        Url : _url,
+        Details : _config.FORMS[_nextForm].Title + " - " + _row.NQT,
+      }, _config);
+      
+      // LOG EDGE / STEP
+      insert_LogEntry(_log, _row.ID, __user, _next, _form, _nextForm ? _nextForm : "", "SENT", _token);
+      
+    } else {
+      
+      // -- Generate Final Document -- //
+      var _db = getSingleSheet(_config.DATABASES.MASTER, __config.SHEETS.ENTITIES);
+      var _entity = getMatchingRow(_db, "CODE", organisation);
+      
+      if (_entity) {
+        
+        // -- Get Simplified Data for Output -- //
+        var _data = hydrate_all_data(_row.ID, _row.NAME, organisation, _config, true); // Key / Object Value for each form
+        
+        Object.keys(_data).map(function(form) {
+          
+          var _new_Obj = {};
+          
+          Object.keys(_data[form]).map(function(key) {
+            
+            var _obj = _data[form][key];
+            var _field = _data[form][key].Field ? _obj.Field.toUpperCase() : key.toUpperCase();
+            var _val = _obj.Value;
+
+            // -- Check for Date Value / Turn into String as required -- //
+            if (_val && (Object.prototype.toString.call(_val) === "[object Date]" || _val instanceof Date || typeof _val.getMonth === "function" || 
+              (String(_val).indexOf("T") > 0 && moment(_val, [moment.ISO_8601], true).isValid()))) {
+              var _m = moment(_val);
+              if (_m.isValid()) _val = _m.format("dddd, MMMM Do YYYY, h:mm:ss a");
+            }
+
+            
+            if (_val === true && (_obj.Details || _obj.Target || _obj.Evidence)) {
+           
+              _val = "YES";
+           
+              if (_obj.Details && Object.prototype.toString.call(_obj.Details) === "[object Array]") {
+                for (var i = 0; i < _obj.Details.length; i++) {
+                  if (_obj.Details[i].Value) _val = _val + (_val ? (_val == "YES" ? ": " : "; ") : "") + _obj.Details[i].Value;
+                }
+              }
+           
+              if (_obj.Target && Object.prototype.toString.call(_obj.Target) === "[object Array]") {
+                for (var i = 0; i < _obj.Target.length; i++) {
+                  if (_obj.Target[i].Value) _val = _val + (_val ? (_val == "YES" ? ": " : "; ") : "") + _obj.Target[i].Value;
+                }
+              }
+           
+            } else if (_val === true) {
+           
+              _val = "YES";
+           
+            } else if (_val === false) {
+        
+              _val = "NO";
+           
+            }
+              
+            _new_Obj[_field] = _val;
+            
+          });
+          
+          _data[form] = _new_Obj;
+          
+        });
+        
+        // -- Get All Edges -- //
+        var _edges = getMatchingRows(_log, "ID", _row.ID);
+        var _bcc = "";
+        if (_edges && _edges.length >0) {
+          for (var i = 0; i < _edges.length; i++) {
+            var _email = _edges[i]["TO"];
+            if (_email && _email != _next && _bcc != _email && _bcc.indexOf("," + _email) < 0) _bcc = _bcc + (_bcc ? "," : "") + _email;
+          }
+        }
+        
+        // -- Generate Output Document -- //
+        var _folder = _entity.FOLDER ? DriveApp.getFolderById(getDriveId(_entity.FOLDER)) : DriveApp.getRootFolder();
+        var _template = DriveApp.getFileById(getDriveId(_config.DOCUMENT_CYCLE_1_TEMPLATE));
+        var _output_Doc = generateDocument(_template, _folder, _data, _template.getName() + " - " + _row.NQT);
+        var _output_Doc_Id = _output_Doc.getId();
+        _output_Doc.saveAndClose()
+        
+        
+        if (_output_Doc) {
+        
+          // SEND EMAIL COMPLETE
+          notifyComplete({
+            To : _next,
+            From : __user,
+            Subject : _row.NQT,
+            Url : "",
+            Details : "COMPLETE - " + _row.NQT,
+            Attachment : DriveApp.getFileById(_output_Doc_Id).getAs("application/pdf"),
+            Copies : _bcc,
+          }, _config);
+        
+        }
+        
+      }
+
+    }
+
+    // Return to calling page
+    return true;
+    
+  }
+  
+  // Need to write EDGE into DB, get form name from Config
+  
+}
+// == SUBMIT FORM DATA == //
+
+
+
+
+// == ACCEPT FORM == //
+function accept_form(token, organisation) {
+  
+  var _config = config();
+  var _log = getSingleSheet(_config.DATABASES.MASTER, organisation);
+  var _row = getMatchingRow(_log, "TOKEN", token);
+  if (_row) {
+    
+    _log.getRange(_row.__ROW, getHeader(_log, "ACTION")).setValue("ACCEPTED");
+    
+    // Return to calling page
+    return true;
+    
+  }
+  
+  return;
+  
+}
+// == ACCEPT FORM == //
+
+
+
+
+// == REJECT FORM == //
+function reject_form(token, organisation, to, form, message) {
+  
+  var _config = config();
+  var _log = getSingleSheet(_config.DATABASES.MASTER, organisation);
+  var _row = getMatchingRow(_log, "TOKEN", token);
+  if (_row) {
+    
+    _log.getRange(_row.__ROW, getHeader(_log, "ACTION")).setValue("REJECTED");
+    
+    var _token = generateCode(25, _row.ID);
+    var _url = _config.URL + "?t=" + encodeURIComponent(_token) +
+      "&o=" + encodeURIComponent(organisation);
+    
+    // SEND EMAIL
+    notifyReject(
+      {
+        To : to,
+        From : _row.TO,
+        Subject : _row.NQT,
+        Url : _url,
+        Details : "Form " + _row["FORM TO"] + " for " + _row.NQT + " has been rejected / returned back to you.",
+        Message : message,
+      }, _config
+    );
+    
+    // Log REJECT
+    if (form == "NONE") form == "";
+    insert_LogEntry(_log, _row.ID, _row.TO, to, _row["FORM TO"], form, "RETURNED", _token);
+  
+    // Return to calling page
+    return true;
+    
+  }
+  
+  return;
+  
+}
+// == REJECT FORM == //

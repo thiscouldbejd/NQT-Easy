@@ -1,0 +1,220 @@
+<div id="control">
+  
+  <div class="row">
+  
+    <div class="col-md-9">
+  
+      <div class="panel panel-primary">
+  
+        <div class="panel-heading">
+    
+          <h4 class="panel-title">
+            <span class="glyphicon glyphicon-send" style="padding-right: 0.6em;"></span>
+            Before you Start
+          </h4>
+
+        </div>
+  	
+        <div class="panel-body">
+              
+          <!-- Next Node --><!-- Text input-->
+          <div class="pre_reject form-group" style="display: none;">
+            <label class="col-md-3 control-label" for="reject_back_to">Return Form To</label>
+            <div class="col-md-9">
+              <input id="reject_to" name="reject_to" type="email" placeholder="last@school.org" class="form-control input-md" data-field="Reject To" data-order="997" />
+              <i id="reject_to-glyph" class="form-control-feedback glyphicon glyphicon-envelope pad-right-more"></i>
+              <span class="help-block">Whom to send this form back to.</span>
+            </div>
+          </div>
+      
+          <!-- Reject Form --><!-- Select Basic -->
+          <div class="pre_reject form-group" style="display: none;">
+            <label class="col-md-3 control-label" for="reject_form">Send them Form</label>
+            <div class="col-md-9">
+              <select id="reject_form" name="reject_form" class="form-control input-md" data-field="Reject Form" data-order="998"></select>
+              <span class="help-block">The form you wish to return them.</span>
+            </div>
+          </div>
+              
+          <!-- Rejection Reason --><!-- Text input-->
+          <div class="pre_reject form-group" style="display: none;">
+            <label class="col-md-3 control-label" for="reject_message">Reason for Return</label>
+            <div class="col-md-9">
+              <input id="rejection_message" name="rejection_message" type="text" placeholder="Details of Rejection" class="form-control input-md" data-field="Rejection Message" data-order="999" />
+              <i id="rejection_message-glyph" class="form-control-feedback glyphicon glyphicon-pencil pad-right-more"></i>
+              <span class="help-block">Further details about why you are returning this form, e.g. data errors, incomplete evidence etc.</span>
+            </div>
+          </div>
+      
+          <!-- Header for Process Control (Reject / Continue) --><!-- Button (Double) -->
+          <div class="form-group col-md-12">
+            <button id="reject" class="btn material-button material-button-danger action">Reject</button>
+            <button id="continue" class="btn material-button material-button-success action">Accept &amp; Continue</button>
+            <span class="help-block">This form has been passed to you for completion, please <strong>review any pre-filled data</strong> below and choose to <strong>reject</strong> it, sending it back to <em>from@school.org</em>
+      or continue and fill it in.</span>
+          </div>
+  
+        </div>
+  
+      </div>
+  
+    </div>
+
+  </div>
+  
+</div>
+
+<script type="text/javascript">
+  
+  $(function() {
+  
+    // -- Form Process Control Methods -- //
+    $("#control #continue").click(function(e) {
+    
+      e.preventDefault();
+      var _ctrl = $("#control");
+      
+      if (_ctrl.find(".pre_reject").is(":visible")) {
+      
+        _ctrl.find(".pre_reject").delay(200).fadeOut();
+        _ctrl.find(".panel").removeClass("panel-danger").addClass("panel-primary");
+        _ctrl.find(".panel-title").text("Before you Start");
+        $(this).removeClass("dim");
+        
+      } else {
+        
+        var _spin = new Spinner(spin_small).spin();
+	    this.appendChild(_spin.el);
+      
+        // Submit Acceptance
+        google.script.run
+          .withSuccessHandler(function(value) {
+          
+            // -- Stop Spinning & Re-Enabled Buttons -- //
+            if (_spin) _spin.stop();
+			_ctrl.find(".action").prop("disabled", false).removeClass("high-dim");
+            
+             if (value === true) {
+          
+              // -- Show Success -- //
+              if (__debug) console.log("ACCEPT FORM SUCCEEDED");
+              
+              // -- Hide Form -- //
+              if (_ctrl.is(":visible")) _ctrl.slideToggle();
+              $("#submission .action").prop("disabled", false).removeClass("high-dim");
+              
+            } else {
+              
+              // -- Show Failure -- //
+              if (__debug) console.log("ACCEPT FORM FAILED");
+              
+            }
+            
+          })
+          .withFailureHandler(function(err) {
+          
+            // -- Stop Spinning & Re-Enabled Buttons -- //
+            if (_spin) _spin.stop();
+			_ctrl.find(".action").prop("disabled", false).removeClass("high-dim");
+          
+            // -- Show Failure -- //
+            if (__debug) {
+              console.log("REJECT FORM FAILED");
+              console.log(err);
+            }
+              
+          })
+          .accept_form(__token, __organisation);
+      
+      }
+      
+	});
+    
+    $("#control #reject").click(function(e) {
+      
+      e.preventDefault();
+      var _ctrl = $("#control");
+      
+      _ctrl.find("input").removeClass("error").prop("title", "");
+      
+      if (_ctrl.find(".pre_reject").is(":visible")) {
+      
+        // -- Validate Input Data -- //      
+        var _to = $("#reject_to").val();
+        if (!_to) {$("#reject_to").addClass("error").prop("title", "Please Fill in this Field"); return;}
+        
+        var _form = $("#reject_form").val();
+        if (!_form) {$("#reject_form").addClass("error").prop("title", "Please Fill in this Field"); return;}
+        
+        var _message = $("#rejection_message").val();
+        if (!_message) {$("#rejection_message").addClass("error").prop("title", "Please Fill in this Field"); return;}
+        
+        
+        // -- Clean Up Previous and Display Duplicate Saves / Submissions -- //
+        _ctrl.find(".action").parent().find(".glyphicon").remove();
+        _ctrl.find(".action").prop("disabled", true).addClass("high-dim");
+      
+        var _spin = new Spinner(spin_small).spin();
+	    this.appendChild(_spin.el);
+      
+        // Submit Rejection
+        google.script.run
+          .withSuccessHandler(function(value) {
+          
+            // -- Stop Spinning & Re-Enabled Buttons -- //
+            if (_spin) _spin.stop();
+			_ctrl.find(".action").prop("disabled", false).removeClass("high-dim");
+            
+             if (value === true) {
+          
+              // -- Show Success -- //
+              if (__debug) console.log("REJECT FORM SUCCEEDED");
+              $("<span />").addClass("status glyphicon glyphicon-ok success-icon").insertAfter(_ctrl.find("#continue"));
+              _ctrl.find(".panel").removeClass("panel-primary").addClass("panel-success");
+              
+              // -- Hide Form -- //
+              $("div.data, fieldset.data").fadeOut("slow");
+              
+            } else {
+              
+              // -- Show Failure -- //
+              if (__debug) console.log("REJECT FORM FAILED");
+              $("<span />", {title : JSON.stringify(value)}).addClass("status glyphicon glyphicon-remove failure-icon")
+                .insertAfter(_ctrl.find("#continue"));
+              
+            }
+            
+          })
+          .withFailureHandler(function(err) {
+          
+            // -- Stop Spinning & Re-Enabled Buttons -- //
+            if (_spin) _spin.stop();
+			_ctrl.find(".action").prop("disabled", false).removeClass("high-dim");
+          
+            // -- Show Failure -- //
+            if (__debug) {
+              console.log("REJECT FORM FAILED");
+              console.log(err);
+            }
+            
+            $("<span />", {title : JSON.stringify(err)}).addClass("status glyphicon glyphicon-remove failure-icon")
+              .insertAfter(_ctrl.find("#continue"));
+              
+          })
+          .reject_form(__token, __organisation, _to, _form, _message);
+      
+      } else {
+      
+        _ctrl.find(".panel-title").text("Reject Form");
+        _ctrl.find(".panel").removeClass("panel-primary").addClass("panel-danger");
+        _ctrl.find(".pre_reject").delay(200).fadeIn();
+        
+        $("#control #continue").addClass("dim");
+  
+      }
+      
+	});
+    // -- Form Process Control Methods -- //
+  });
+
+</script>

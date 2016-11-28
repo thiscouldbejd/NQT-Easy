@@ -1,0 +1,90 @@
+/*
+
+  1/ |DONE| HTML5 Form Submission Validation buggy, turned off pending fix. [BUG]
+
+  2/ |DONE| Disable re-submits etc once full test complete.
+
+  4/ |DONE| Auto-document generation bug with Google - causing some documents to crash after gen - turned off / resolution awaited [BUG]
+
+  5/ |DONE| Teaching Standards / Targets not showing on 'Data Previously Submitted: Assess NQT' section of form - 
+    needs string representation? [BUG]
+
+  8/ |DONE| Different Email Template for completion? [FEATURE]
+
+    8.1/ |DONE| Format Completion Email Template
+  
+  9/ |DONE| Maybe relabel the 'Continue' button to 'Accept' or 'Accept & Continue' as it isn't clear what you are continuing! ;)
+
+ 10/ |DONE| Put a help label somewhere to make it clear that you have to click reject or submit AGAIN after you have filled in
+   the extra details.
+   
+ 11/ |DONE| Put instructions under the title.
+ 
+ 12/ |DONE| Default fields? [FEATURE]
+ 
+ 13/ |DONE| Subject Field - on template report but not on input? Now removed [FEATURE]
+ 
+ 14/ |DONE| Error Codes on server failure
+ 
+ 16/ |DONE| Update Row Status to Complete Upon Submission / Rejection / Acceptance
+ 
+ 17/ |DONE| Autosize doesn't seem to be working for Populate From Load [BUG]
+ 
+ 21/ |DONE| Date Formatting for Document Output
+ 
+ 22/ |DONE|  Fields on output document are not 'displayed' fields. Is this an issue??? [BUG]
+ 
+ 23/ |DONE| Race condition(?) on generation of PDF...
+ 
+ 24/ |DONE| CREATED is wrong word for field, change to STAMPED
+ 
+ 25/ |DONE| Mandatory Standards Text? -> Flow through to document
+ 
+ 26/ |DONE| Support Arrangement in Report
+ 
+ 27/ |DONE| Swap True to Yes/No on Form + Report
+ 
+ 28/ |DONE| Remove {{EXTRA}} Merge Tags from Document
+ 
+ 29/ |DONE| Targets in Report
+ 
+ 30/ |DONE| Send back to NQT (re-open for editing) [BUG]
+ 
+ 
+ =========================================================================
+ 
+ 
+ 3/ Full end-to-end system test, including screwy / malicious data entry (reject inputs that look like formulas).
+ 
+ 6/ Step Links not yet active (need extra field on 'Edges') [FEATURE]
+
+ 7/ Security Review to check it is highly unlikely that data can leak without Human Action
+
+ 15/ Error Codes on API failure
+ 
+ 18/ Add DB (for each NQT / Subject) link to master sheet [FEATURE]
+ 
+ 19/ Email Summary for Admins (Process) == Issue 34
+ 
+ 20/ Date of Last Update in Edges -> Pulled through the NQTs sheet too?
+
+ 31/ Recovery Saving (from WEEP)
+ 
+ 32/ Error Code to catch DB not configured - and give instructions as to what needs doing!
+ 
+ 
+ 33/ Put hidden & optional comment on the Oversight form....but have it as a drop to fill in.
+
+ 34/ Admin & management email summary for schools / individual entity processes????
+
+ 35/ Get Amanda to put up PDF versions of the forms as well as copy links for the Google Docs.
+
+ 36/ Pre-populate last field at the end of the process....from config spreadsheet? <-- Pre-fill Oversight form as going to xxx@xxxxx.com -> Same for every school in the Appropriate Body.
+ 
+ 37/ Compulsory Fields --> Teachers' Standards
+ 
+ 38/ Finish scriptr -> 'Sync' code to Github.
+ 
+ 39/ ** TRIGGERS! **
+ 
+*/

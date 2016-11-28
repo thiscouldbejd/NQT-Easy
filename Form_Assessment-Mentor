@@ -1,0 +1,317 @@
+<!DOCTYPE html>
+<html>
+
+  <head>
+    <base target="_top">
+    
+    <!-- Meta -->
+    <meta name="description" content="">
+    <title></title>
+            
+    <!-- Shared Head -->
+    <?!= HtmlService.createHtmlOutputFromFile("Form_Head").getContent(); ?>
+    
+    <!-- Standards -->
+    <?!= HtmlService.createHtmlOutputFromFile("Standards.js").getContent(); ?>
+    
+    <!-- Page Javascript/s -->
+    <?!= HtmlService.createHtmlOutputFromFile("Spin.js").getContent(); ?>
+    <?!= HtmlService.createHtmlOutputFromFile("Form.js").getContent(); ?>
+    <?!= HtmlService.createHtmlOutputFromFile("Form_Assessment.js").getContent(); ?>
+    <?!= HtmlService.createHtmlOutputFromFile("Form_Assessment-Mentor.js").getContent(); ?>
+
+    <!-- Page Stylesheet/s -->
+    <?!= HtmlService.createHtmlOutputFromFile("Material_Stylesheet.css").getContent(); ?>
+    <?!= HtmlService.createHtmlOutputFromFile("Form_Stylesheet.css").getContent(); ?>
+    
+  </head>
+  
+  <body>
+    
+    <div class="container-fluid">
+
+	  <div class="row">
+			
+        <!-- Sidebar -->
+        <div class="col-md-3">
+
+		  <h1><?= Title ?></h1>
+          <div id="description" class="alert alert-info alert-dismissible" role="alert" style="display: none;">
+            <button type="button" class="close" data-dismiss="alert" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+            <p><?= Description ?></p>
+          </div>
+          
+          <!-- Data Passing from Server -->
+          <div id="__data_display" style="display: none;"><?= Display ?></div>
+          <div id="__data_populate" style="display: none;"><?= Populate ?></div>
+          <div id="__data_token" style="display: none;"><?= Token ?></div>
+          <div id="__data_organisation" style="display: none;"><?= Organisation ?></div>
+          <div id="__data_user" style="display: none;"><?= User ?></div>
+          <div id="__data_defaults" style="display: none;"><?= Defaults ?></div>
+          <div id="__data_status" style="display: none;"><?= Status ?></div>
+          <div id="__data_debug" style="display: none;"><?= Debug ?></div>
+			
+        </div>
+
+        <div class="content col-md-9">
+          
+          <form id="ASSESSMENT_MENTOR" class="form-horizontal pane" role="form">
+          
+            <!-- Shared Prologue -->
+            <?!= HtmlService.createHtmlOutputFromFile("Form_Prologue").getContent(); ?>
+          
+            <!-- Shared Data Placeholder -->
+            <?!= HtmlService.createHtmlOutputFromFile("Form_Previous").getContent(); ?>
+            
+            <fieldset>
+            
+              <!-- Date of the Beginning of the Assessment Period --><!-- Text input-->
+              <div class="form-group">
+                <label class="col-md-3 control-label" for="assessment_Start">Start of the Assessment Period</label>
+                <div class="col-md-6">
+                  <input id="assessment_Start" name="assessment_Start" type="date" class="form-control input-md resizable" required="required" data-field="Assessment Start" data-display="true" data-order="1" />
+                  <span class="help-block"></span>
+                </div>
+              </div>
+
+
+			  <!-- Date of the End of the Assessment Period --><!-- Text input-->
+              <div class="form-group">
+                <label class="col-md-3 control-label" for="assessment_End">End of the Assessment Period</label>
+                <div class="col-md-6">
+                  <input id="assessment_End" name="assessment_End" type="date" class="form-control input-md resizable" required="required" data-field="Assessment End" data-display="true" data-order="2" />
+                  <span class="help-block"></span>
+                </div>
+              </div>
+              
+              <!-- Numerical input-->
+              <!-- Days Absent -->
+              <div class="form-group">
+                <label class="col-md-3 control-label" for="number_of_Absences">Any absences this assessment period?</label> 
+                <div class="col-md-6">
+                  <div class="input-group" data-for="number_of_Absences">
+                    <div class="input-group-btn">
+                      <button type="button" class="btn btn-default alter-numerical" data-target="number_of_Absences" data-value="-0.5"><span class="glyphicon glyphicon-minus"></span></button>
+                      <button type="button" class="btn btn-default alter-numerical" data-target="number_of_Absences" data-value="0.5"><span class="glyphicon glyphicon-plus"></span></button>
+                      <button type="button" class="btn eraser" data-target="number_of_Absences"
+                        style="background-image: linear-gradient(to bottom,#fff 0,#e0e0e0 100%); box-shadow: inset 0 1px 0 rgba(255,255,255,.15),0 1px 1px rgba(0,0,0,.075); border-color: #ccc; color: #333;">
+                        <span class="glyphicon glyphicon-erase" style="padding-left: 0.7em;"></span>
+                      </button>
+                    </div>
+                    <input id="number_of_Absences" name="number_of_Absences" type="text" class="form-control" style="margin-left: 0.2em;" readonly="readonly" aria-label="Number of Absences this assessment period" data-suffix="day/s absent this assessment period" data-min="0" data-max="100" data-field="Number of Absences" data-display="true" data-order="3" />
+                  </div>
+                  <textarea data-for="number_of_Absences" data-type="Details" id="details_of_Absences" name="details_of_Absences" class="form-control resizable optional" style="margin-top: 0.4em;" rows="1" aria-label="Further Details of Absence" placeholder="Further details, if applicable"></textarea>
+                  <span class="help-block">If the NQT has been ill, or has been <strong>absent</strong> from your school, please enter the number of days here.</span>  
+                </div>
+              </div>
+
+
+              <!-- Assessment Recommendation --><!-- Radio Select-->
+              <div class="form-group">
+                <label class="col-md-3 control-label" for="assessment_Recomendation">Recommendation</label>
+                <div class="col-md-6">
+                  <div class="btn-group" data-toggle="buttons">
+                    <label class="btn btn-success">
+                      <input type="radio" name="options" autocomplete="off" data-target="assessment_Recomendation" data-value="Making satisfactory progress towards meeting the Core Standards within the induction period" />
+                      <span class="glyphicon glyphicon-ok"></span>
+                    </label>
+                    <label class="btn btn-danger">
+                      <input type="radio" name="options" autocomplete="off" data-target="assessment_Recomendation" data-value="May not be able to meet the Core Standards for the satisfactory completion of the induction period" />
+                      <span class="glyphicon glyphicon-remove"></span>
+                    </label>
+                  </div>					
+                  <textarea id="assessment_Recomendation" name="assessment_Recomendation" type="text" class="form-control resizable" aria-label="Recommendation" readonly="readonly" data-field="Recommendation" rows="1" data-display="true" data-order="4"></textarea>
+                  <span class="help-block">The recommendation relating to the your assessment of NQT performance or performance to date (on track to)</span>
+                </div>
+              </div>
+							
+              <!-- Assessment Recommendation --><!-- Radio Select-->
+              <div class="form-group">
+                <label class="col-md-3 control-label" for="assessment_Judgement">Judgement</label>
+                <div class="col-md-6">
+                  <div id="assessment_Judgement_Buttons" class="btn-group" data-toggle="buttons">
+                    
+                    <label class="btn btn-primary">
+                      <input type="radio" name="options" autocomplete="off" data-target="assessment_Judgement" data-value="A: Considerable strengths" />
+                      <span class="glyphicon glyphicon-ok dim"></span>
+                    </label>
+
+                    <label class="btn btn-info">
+                      <input type="radio" name="options" autocomplete="off" data-target="assessment_Judgement" data-value="B: Many strengths with a few areas for development that are being addressed easily" />
+                      <span class="glyphicon glyphicon-ok dim"></span>
+                    </label>
+
+                    <label class="btn btn-success">
+                      <input type="radio" name="options" autocomplete="off" data-target="assessment_Judgement" data-value="C: Some strengths, some areas for development have been met and some still to work on" />
+                      <span class="glyphicon glyphicon-ok dim"></span>
+                    </label>
+
+                    <label class="btn btn-warning">
+                      <input type="radio" name="options" autocomplete="off" data-target="assessment_Judgement" data-value="D: Sufficient areas of development to warrant additional support from within the school" />
+                      <span class="glyphicon glyphicon-ok dim"></span>
+                    </label>
+
+                    <label class="btn btn-danger">
+                      <input type="radio" name="options" autocomplete="off" data-target="assessment_Judgement" data-value="E: Many areas for development. Significant additional support required by the NQT" />
+                      <span class="glyphicon glyphicon-ok dim"></span>
+                    </label>
+										
+                    <label class="btn btn-primary black">
+                      <input type="radio" name="options" autocomplete="off" data-target="assessment_Judgement" data-value="Not enough evidence seen / Opportunity to assess" />
+                      <span class="glyphicon glyphicon-eye-close dim"></span>
+                    </label>
+										
+                    <label class="btn"
+                      style="background-image: linear-gradient(to bottom,#fff 0,#e0e0e0 100%); box-shadow: inset 0 1px 0 rgba(255,255,255,.15),0 1px 1px rgba(0,0,0,.075); border-color: #ccc;	color: #333;">
+                      <input type="radio" name="options" autocomplete="off" data-target="assessment_Judgement" data-value=""  />
+                      <span class="glyphicon glyphicon-erase no-dim" style="padding-left: 0.7em;"></span>
+                    </label>
+                  
+                  </div>					
+                  <textarea id="assessment_Judgement" name="assessment_Judgement" type="text" class="form-control resizable" aria-label="Overall Judgement" readonly="readonly" data-field="Judgement" rows="1" data-display="true" data-order="5"></textarea>
+                  <span class="help-block">The scale above is intended to offer an early indication of the NQTs ability to meet the Induction Standards within the Induction Year and the level of support needed. Once the NQT has met the Induction Standards, this information becomes redundant and will not be referred to again.</span>
+                </div>
+              </div>
+
+              <!-- Support Confirmation --><!-- Checkbox input-->
+              <div class="form-group">
+                <label class="col-md-3 control-label" for="assessment_SupportConfirmation">NQT has experienced suitable support &amp; monitoring</label> 
+                <div class="col-md-6 ">
+                  <div class="input-group">
+                    <span class="input-group-addon">
+                      <input id="assessment_SupportConfirmation" name="assessment_SupportConfirmation" type="checkbox" aria-label="Confirmation of Support" data-field="Support Confirmed" data-target="assessment_SupportDeclaration" data-value="I confirm that the NQT has received appropriate support &amp; monitoring" data-order="7">
+                    </span>
+                    <textarea id="assessment_SupportDeclaration" name="assessment_SupportDeclaration" class="form-control resizable" aria-label="Declaration of Support" readonly="readonly" data-field="Support Statement" rows="1" data-display="true" data-order="6"></textarea>
+                  </div>
+                  <span class="help-block">Please read the <a href="https://www.gov.uk/government/publications/induction-for-newly-qualified-teachers-nqts" target="_blank">Statutory Guidance</a> before ticking the above to confirm that NQT has experienced support <strong>in line with this</strong>.</span>  
+                </div>
+              </div>
+
+							
+			  <!-- Confirmation of Induction: Support and Monitoring --><!-- Multi-Checkbox input-->
+              <div class="form-group">
+                <label class="col-md-3 control-label" for="assessment_SupportTypes">Confirmation of Induction: Support and Monitoring</label>
+                <div class="col-md-6">
+                  <!-- List group -->
+                  <ul class="list-group" id="assessment_SupportTypes">
+                    <li class="list-group-item">
+                      <div class="material-switch-label shorten">The NQT has received a reduced timetable, in addition to normal non-contact time</div>
+                      <div class="pull-right">
+                        <input id="assessment_SupportTypes_A" name="assessment_SupportTypes_A" hidden="hidden" type="checkbox" data-field="Support: Reduced Timetable" data-display="true" data-order="7">
+                        <label class="material-switch" for="assessment_SupportTypes_A"></label>
+                      </div>
+                    </li>
+                    <li class="list-group-item">
+                      <div class="material-switch-label shorten">An individualised and structured plan of support has been agreed with the NQT</div>
+                      <div class="pull-right">
+                        <input id="assessment_SupportTypes_B" name="assessment_SupportTypes_B" hidden="hidden" type="checkbox" data-field="Support: Plan" data-display="true" data-order="8">
+                        <label class="material-switch" for="assessment_SupportTypes_B"></label>
+                      </div>
+                    </li>
+                    <li class="list-group-item">
+                      <div class="material-switch-label shorten">Discussions between the NQT and the induction tutor to review progress and set targets</div>
+                      <div class="pull-right">
+                        <input id="assessment_SupportTypes_C" name="assessment_SupportTypes_C" hidden="hidden" type="checkbox" data-field="Support: Discussions" data-display="true" data-order="9">
+                        <label class="material-switch" for="assessment_SupportTypes_C"></label>
+                      </div>
+                    </li>
+                    <li class="list-group-item">
+                      <div class="material-switch-label shorten">It has been ensured that the NQT is familiar with the teaching standards</div>
+                      <div class="pull-right">
+                        <input id="assessment_SupportTypes_D" name="assessment_SupportTypes_D" hidden="hidden" type="checkbox" data-field="Support: Teachers' Standards" data-display="true" data-order="10">
+                        <label class="material-switch" for="assessment_SupportTypes_D"></label>
+                      </div>
+                    </li>
+                    <li class="list-group-item">
+                      <div class="material-switch-label shorten">Observations of the NQT teaching and provision of feedback</div>
+                      <div class="pull-right">
+                        <input id="assessment_SupportTypes_E" name="assessment_SupportTypes_E" hidden="hidden" type="checkbox" data-field="Support: Observed" data-display="true" data-order="11">
+                        <label class="material-switch" for="assessment_SupportTypes_E"></label>
+                      </div>
+                    </li>
+                    <li class="list-group-item">
+                      <div class="material-switch-label shorten">Observations of experienced teachers by the NQT</div>
+                      <div class="pull-right">
+                        <input id="assessment_SupportTypes_F" name="assessment_SupportTypes_F" hidden="hidden" type="checkbox" data-field="Support: Observations" data-display="true" data-order="12">
+                        <label class="material-switch" for="assessment_SupportTypes_F"></label>
+                      </div>
+                    </li>
+                    <li class="list-group-item">
+                      <div class="material-switch-label shorten">An assessment meeting between the NQT and the induction tutor</div>
+                      <div class="pull-right">
+                        <input id="assessment_SupportTypes_G" name="assessment_SupportTypes_G" hidden="hidden" type="checkbox" data-field="Support: Assessment Meeting" data-display="true" data-order="13">
+                        <label class="material-switch" for="assessment_SupportTypes_G"></label>
+                      </div>
+                    </li>
+                  </ul>
+                  <span class="help-block">Please indicate the kinds of support and monitoring arrangements that have been in place throughout this assessment period</span>
+                </div>
+              </div>
+
+
+		      <!-- Further / Other Support Given --><!-- Mutli-Line Text input-->
+              <div class="form-group">
+                <label class="col-md-3 control-label" for="assessment_FurtherSupport">Further / Other Support Given</label>  
+                <div class="col-md-6">
+                  <textarea id="assessment_FurtherSupport" name="assessment_FurtherSupport"class="form-control input-md resizable optional" rows="3" data-field="Support: Further" data-order="14"></textarea>
+                  <span class="help-block">Optional</span>  
+                </div>
+              </div>
+
+
+			  <!-- Teachers' Standards --><!-- Multi-Checkbox input-->
+              <div class="form-group">
+                <label class="col-md-3 control-label" for="standards">Teachers' Standards</label>
+                <div class="col-md-6">
+                  <!-- List group -->
+                  <ul class="list-group" id="standards"></ul>
+                  <span class="help-block"><strong>Click</strong> on the switch of the Teachers' Standards to enter comments on how the NQT has performed against these standards during the assessment period.</span>
+                </div>
+              </div>
+              
+              
+              <!-- Targets = Details / Strategies / Evidence Types --><!-- Complex Input-->
+              <div class="form-group">
+                <label class="col-md-3 control-label" for="has_Targets">Targets</label>  
+                <div class="col-md-6">
+                  <div class="input-group" data-for="target_Entry">
+                    <input id="has_Targets" name="has_Targets" data-field="Targets" data-display="true" hidden="hidden" type="checkbox" data-order="15">
+                    <textarea id="target_Details" class="form-control resizable" style="margin-left: 0.2em;" rows="1" aria-label="Target Details" placeholder="Target Details" ></textarea>
+                    <div class="input-group-btn bottom-align">
+                      <button type="button" id="target_EvidenceType" class="btn btn-default" style="color: #777;">Evidence Type</button>
+                      <button type="button" class="btn btn-default dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                        <span class="caret"></span>
+                        <span class="sr-only">Toggle Dropdown</span>
+                      </button>
+                      <ul class="dropdown-menu dropdown-menu-right">
+                        <li><a href="#" class="dropdown-selector" data-target="target_EvidenceType" data-value="Lesson Plan">Lesson Plan</a></li>
+                        <li><a href="#" class="dropdown-selector" data-target="target_EvidenceType" data-value="Lesson Observation">Lesson Observation</a></li>
+                        <li><a href="#" class="dropdown-selector" data-target="target_EvidenceType" data-value="Audio / Visual Recording">Audio / Visual Recording</a></li>
+                        <li><a href="#" class="dropdown-selector" data-target="target_EvidenceType" data-value="Feedback (from Colleagues / Students)">Feedback (from Colleagues / Students)</a></li>
+                        <li><a href="#" class="dropdown-selector" data-target="target_EvidenceType" data-value="Records (e.g. Google Sheet Markbook)">Records (e.g. Google Sheet Markbook)</a></li>
+                        <li><a href="#" class="dropdown-selector" data-target="target_EvidenceType" data-value="Other">Other</a></li>
+                      </ul>
+                      <button id="add_Target" type="button" class="btn btn-primary" style="margin-left: 0.2em;" title="Add Target to List"><span class="glyphicon glyphicon-floppy-save"></span></button>
+                    </div>
+                  </div>
+                  <span class="help-block">Enter details of the targets you have agreed with the NQT, together with the type of evidence that will confirm the target has been met. Then save them to the list below.</span>
+                </div>
+              </div>
+                            
+            
+            </fieldset>
+      
+            <!-- Shared Epilogue -->
+            <?!= HtmlService.createHtmlOutputFromFile("Form_Epilogue").getContent(); ?>
+    
+          </form>
+    
+        </div>
+    
+      </div>
+    
+    </div>
+    
+  </body>
+  
+</html>

@@ -1,0 +1,209 @@
+<!DOCTYPE html>
+<html>
+
+  <head>
+    <base target="_top">
+    
+    <!-- Meta -->
+    <meta name="description" content="">
+    <title></title>
+            
+    <!-- Shared Head -->
+    <?!= HtmlService.createHtmlOutputFromFile("Form_Head").getContent(); ?>
+    
+    <!-- Standards -->
+    <?!= HtmlService.createHtmlOutputFromFile("Standards.js").getContent(); ?>
+    
+    <!-- Page Javascript/s -->
+    <?!= HtmlService.createHtmlOutputFromFile("Spin.js").getContent(); ?>
+    <?!= HtmlService.createHtmlOutputFromFile("Form.js").getContent(); ?>
+    <?!= HtmlService.createHtmlOutputFromFile("Form_Registration.js").getContent(); ?>
+
+    <!-- Page Stylesheet/s -->
+    <?!= HtmlService.createHtmlOutputFromFile("Material_Stylesheet.css").getContent(); ?>
+    <?!= HtmlService.createHtmlOutputFromFile("Form_Stylesheet.css").getContent(); ?>
+    
+  </head>
+  
+  <body>
+    
+    <div class="container-fluid">
+
+	  <div class="row">
+			
+        <!-- Sidebar -->
+        <div class="col-md-3">
+
+		  <h1><?= Title ?></h1>
+          <div id="description" class="alert alert-info alert-dismissible" role="alert" style="display: none;">
+            <button type="button" class="close" data-dismiss="alert" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+            <p><?= Description ?></p>
+          </div>
+          
+          <!-- Data Passing from Server -->
+          <div id="__data_display" style="display: none;"><?= Display ?></div>
+          <div id="__data_populate" style="display: none;"><?= Populate ?></div>
+          <div id="__data_token" style="display: none;"><?= Token ?></div>
+          <div id="__data_organisation" style="display: none;"><?= Organisation ?></div>
+          <div id="__data_user" style="display: none;"><?= User ?></div>
+          <div id="__data_defaults" style="display: none;"><?= Defaults ?></div>
+          <div id="__data_status" style="display: none;"><?= Status ?></div>
+          <div id="__data_debug" style="display: none;"><?= Debug ?></div>
+			
+        </div>
+
+        <div class="content col-md-9">
+
+          <form id="REGISTER_NQT" class="form-horizontal pane" role="form">
+          
+            <!-- Shared Prologue -->
+            <?!= HtmlService.createHtmlOutputFromFile("Form_Prologue").getContent(); ?>
+          
+            <!-- Shared Data Placeholder -->
+            <?!= HtmlService.createHtmlOutputFromFile("Form_Previous").getContent(); ?>
+            
+            <fieldset class="data">
+            
+              <!-- School Name --><!-- Text input-->
+              <div class="form-group">
+                <label class="col-md-3 control-label" for="school_name">School Name</label>  
+                <div class="col-md-6">
+                  <input id="school_name" name="school_name" type="text" placeholder="Name" class="form-control input-md" required="required" data-field="School" data-display="true" data-order="1" />
+                  <span class="help-block">The full name of the school to register</span>  
+                </div>
+              </div>
+
+              
+              <!-- School URN Number --><!-- Text input-->
+              <div class="form-group">
+                <label class="col-md-3 control-label" for="school_number">School URN Number</label>  
+                <div class="col-md-6">
+                  <input id="school_number" name="school_number" type="text" placeholder="0000000" class="form-control input-md" required="required"  data-field="DfE Number" data-display="true" data-order="2" />
+                  <span class="help-block">The URN Number is normally a 6 digit number, which is unique to the organisation.
+                  If you don't know your number, it can be <a href="http://www.education.gov.uk/edubase/home.xhtml" target="_new">searched for here</a></span>  
+                </div>
+              </div>
+            
+            </fieldset>
+            
+            <fieldset class="data">
+            
+              <!-- Phase Taught --><!-- Select Basic -->
+              <div class="form-group">
+                <label class="col-md-3 control-label" for="nqt_phaseTaught">Phase Taught by NQT</label>
+                <div class="col-md-6">
+                  <select id="nqt_phaseTaught" name="nqt_phaseTaught" class="form-control input-md"  required="required" data-field="Phase Taught" data-display="true" data-order="3">
+                    <option value="Primary">Primary</option>
+                    <option value="Secondary">Secondary</option>
+                  </select>
+                </div>
+              </div>
+
+              <!-- NQT Name --><!-- Text input-->
+              <div class="form-group">
+                <label class="col-md-3 control-label" for="nqt_name">NQT Name</label>  
+                <div class="col-md-6">
+                  <input id="nqt_name" name="nqt_name" type="text" placeholder="Name" class="form-control input-md" required="required" data-field="Name" data-display="true" data-order="4" />
+                  <i id="nqt_name-glyph" class="form-control-feedback glyphicon glyphicon-user pad-right-more"></i>
+                </div>
+              </div>
+
+							
+              <!-- Mutli-Line Text input--><!-- NQT Former Name/s -->
+              <div class="form-group">
+                <label class="col-md-3 control-label" for="nqt_formerNames">Former Name/s</label>  
+                <div class="col-md-6">
+                  <textarea id="nqt_formerNames" name="nqt_formerNames"class="form-control input-md resizable optional" rows="2" data-field="Former Name/s" data-order="5"></textarea>
+                  <span class="help-block">This is an <strong>optional</strong> field and should only be completed if the NQT has a former name/s that they would have previously be known by</span>
+                </div>
+              </div>
+
+							
+              <!-- Date input--><!-- NQT Date of Birth -->
+              <div class="form-group">
+                <label class="col-md-3 control-label" for="nqt_dob">Date of Birth</label>  
+                <div class="col-md-6">
+                  <input id="nqt_dob" name="nqt_dob" type="date" class="form-control input-md" required="required" data-field="Date of Birth" data-order="6" />
+                </div>
+              </div>
+
+							
+              <!-- Text input--><!-- NQT Teacher Registration Number -->
+              <div class="form-group">
+                <label class="col-md-3 control-label" for="nqt_trn">NQT Teacher Reference Number</label>  
+                <div class="col-md-6">
+                  <input id="nqt_trn" name="nqt_trn" type="text" placeholder="Number" class="form-control input-md" required="required" data-field="Teacher Reference Number" data-display="true" data-order="7"/>
+                  <span class="help-block">TRNs have been issued in different formats, so please remove 'RP' or '/' characters so that you are left with just 7 numerical digits, e.g. RP 00/12345 becomes 0012345 and 12/34567 becomes 1234567</span>
+                </div>
+              </div>
+
+							
+              <!-- Text input--><!-- NQT National Insurance Number -->
+              <div class="form-group">
+                <label class="col-md-3 control-label" for="nqt_niNumber">NQT NI Number</label>  
+                <div class="col-md-6">
+                  <input id="nqt_niNumber" name="nqt_niNumber" type="text" placeholder="AB 12 34 56 C" pattern="^\s*([a-zA-Z]){2}\s*([0-9]){1}\s*([0-9]){1}\s*([0-9]){1}\s*([0-9]){1}\s*([0-9]){1}\s*([0-9]){1}\s*([a-zA-Z]){1}?$" class="form-control input-md" required="required" data-field="NI Number"  data-order="6"/>
+                </div>
+              </div>
+
+							
+              <!-- Date input--><!-- NQT Date of Award -->
+              <div class="form-group">
+                <label class="col-md-3 control-label" for="nqt_award">Date of QTS Award</label>  
+                <div class="col-md-6">
+                  <input id="nqt_award" name="nqt_award" type="date" class="form-control input-md" required="required"  data-field="Date of QTS" data-display="true" data-order="8" />
+                  <span class="help-block">The date at which the NQT was awared Qualified Teacher Status</span>
+                </div>
+              </div>
+
+
+              <!-- Text input--><!-- NQT FTE -->
+              <div class="form-group">
+                <label class="col-md-3 control-label" for="nqt_fte">Full Time Equivalent</label>  
+                <div class="col-md-6">
+                  <input id="nqt_fte" name="nqt_fte" type="number" min="0" max="1" value="1" step="0.01" class="form-control input-md" required="required" data-field="Full Time Equivalent" data-display="true" data-order="9" />
+                  <span class="help-block">Please enter 1 if NQT is full time</span>  
+                </div>
+              </div>
+
+            </fieldset>
+
+            <fieldset class="data">
+					
+              <!-- Text input--><!-- NQT Email -->
+              <div class="form-group">
+                <label class="col-md-3 control-label" for="nqt_email">NQT Email</label>  
+                <div class="col-md-6">
+                  <input id="nqt_email" name="nqt_email" type="email" placeholder="nqt@school.org" class="form-control input-md optional" data-field="Email" data-display="true" data-order="10" />
+                  <i id="nqt_email-glyph" class="form-control-feedback glyphicon glyphicon-user pad-right-more"></i>
+                  <span class="help-block">This is an <strong>optional</strong> field, and can entered by the Mentor when they complete the assessment.</span>
+                </div>
+              </div>
+
+							
+              <!-- Delegated NQT Lead / Headteacher Email --><!-- Text input-->
+              <div class="form-group">
+                <label class="col-md-3 control-label" for="delegatedleadheadteacher_email">Delegated NQT Lead / Headerteacher Email</label>  
+                <div class="col-md-6">
+                  <input id="delegatedleadheadteacher_email" name="delegatedleadheadteacher_email" type="text" placeholder="nqt-lead@school.org" class="form-control input-md optional" data-field="NQT Lead Email" data-display="true" data-order="11" />
+                  <i id="delegatedleadheadteacher_email-glyph" class="form-control-feedback glyphicon glyphicon-user pad-right-more"></i>
+                  <span class="help-block">This is an <strong>optional</strong> field, and can entered by the NQT when they complete the assessment.</span>
+                </div>
+              </div>
+            
+            </fieldset>
+      
+            <!-- Shared Epilogue -->
+            <?!= HtmlService.createHtmlOutputFromFile("Form_Epilogue").getContent(); ?>
+    
+          </form>
+    
+        </div>
+    
+      </div>
+    
+    </div>
+    
+  </body>
+  
+</html>

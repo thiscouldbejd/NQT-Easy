@@ -1,0 +1,193 @@
+// -- Web Request Handler -- //
+function doGet(e) {
+
+  var _template;
+  var _error_code;
+  var _config = config();
+  
+  // -- Interrogate Parameters -- //
+  if(typeof e !== 'undefined' && e) {
+  
+    if (e.parameter.t) {
+    
+      var _token = decodeURIComponent(e.parameter.t);
+      
+      if (e.parameter.p) { // Process
+        
+        var _process = decodeURIComponent(e.parameter.p).toUpperCase();
+        var _db = getSingleSheet(_config.DATABASES.MASTER, "NQTs");
+        var _row = getMatchingRow(_db, "TOKEN", _token);
+        
+        if (_row) {
+          
+          if (!_row.ID) {
+            
+            var _id = Math.uuid();
+            
+            _db.getRange(_row.__ROW, 1).setValue(_id).setFontColor("#cccccc");
+            
+            // Start the process
+            var _organisation = _row.SCHOOL;
+            
+            if (_organisation) {
+              
+              var _log = getSingleSheet(_config.DATABASES.MASTER, _organisation);
+              
+              if (!_log) {
+                
+                var _parent = SpreadsheetApp.openById(_config.DATABASES.MASTER);
+                
+                _log = _parent.insertSheet(_organisation, _parent.getSheets().length)
+                  .setTabColor("#ffff00").hideSheet();
+                
+                _log.appendRow([
+                  "ID", "NQT", "SCHOOL", "WHEN", "FROM", "TO", "FORM FROM", "FORM TO", "ACTION", "TOKEN", "LINK"
+                ]);
+                
+                _log.getRange(1, 1, 1, _log.getLastColumn())
+                  .setFontColor("#ffffff").setBackground("#000000").setFontWeight("bold");
+               
+                _log.getRange(1, 2, 1, 2).setBackground("#ff0000");
+                
+              }
+              
+              var _token = generateCode(25, _id);
+              var _url = _config.URL + "?t=" + encodeURIComponent(_token) +
+                "&o=" + encodeURIComponent(_organisation);
+              var _to = _row.ADMIN;
+              
+              if (_to) {
+              
+                // SEND EMAIL
+                notifyStep(
+                  {
+                    To : _row.ADMIN,
+                    From : _config.DEFAULT_FROM,
+                    Subject : _row.NAME,
+                    Url : _url,
+                    Details : "Initial NQT Registration - " + _row.NAME,
+                  }, _config
+                );
+                
+                // LOG EDGE / STEP
+                insert_LogEntry(_log, _id, "", _row.ADMIN, "", Object.keys(_config.FORMS)[0], "SENT", _token);
+                
+                _template = HtmlService.createTemplateFromFile("Success");
+              
+              } else {
+              
+                _error_code = _config.ERRORS.MISSING_DESTINATION;
+                
+              }
+              
+            } else {
+            
+              _error_code = _config.ERRORS.INVALID_ENTITY;
+              
+            }
+            
+          } else {
+          
+            _error_code = _config.ERRORS.PROCESS_ALREADY_RUN;
+            
+          }
+          
+        } else {
+        
+          _error_code = _config.ERRORS.INVALID_SUBJECT;
+          
+        }
+        
+      } else if (e.parameter.o) { // Form
+        
+        var _organisation = decodeURIComponent(e.parameter.o);
+        
+        // -- Look Up Token from DB -- //
+        var _db = getSingleSheet(_config.DATABASES.MASTER, "NQTs");
+        var _log = getSingleSheet(_config.DATABASES.MASTER, _organisation);
+        
+        if (_log) {
+          
+          var _row = getMatchingRow(_log, "TOKEN", _token);
+        
+          if (_row) {
+          
+            var _entity = getMatchingRow(_db, "ID", _row.ID);
+            
+            var _defaults = {
+              Name : _entity["NAME"],
+              School : _entity["SCHOOL NAME"],
+            }
+          
+            var _form = _row["FORM TO"] ? _config.FORMS[_row["FORM TO"]] : _config.FORMS[Object.keys(_config.FORMS)[0]];
+        
+            if (_form) {
+            
+              // == Prepare Return == //
+              _template = HtmlService.createTemplateFromFile(_form.Name);
+            
+              // -- Populate Return -- //
+              _template.Title = _form.Title;
+              var _data = load_form(_token, _organisation);
+              _template.Display = _data.Previous ? JSON.stringify(_data.Previous) : "";
+              _template.Populate = _data.Current ? JSON.stringify(_data.Current) : "";
+              _template.Token = _token;
+              _template.Organisation = _organisation;
+              _template.User = _row["TO"];
+              _template.Defaults = _defaults ? JSON.stringify(_defaults) : "";
+              _template.Description = _form.Description;
+              _template.Status = _row["ACTION"]; // SENT | ACCEPTED | REJECTED | RETURNED | COMPLETED
+              
+              _template.Debug = e.parameter.d ? true : "";
+              // -- Prepare Return -- //
+            
+            } else {
+
+              _error_code = _config.ERRORS.INVALID_FORM;
+              _error_code.Details = _row["FORM TO"] ? 
+                Utilities.formatString("Invalid Form To: %s.", _row["FORM TO"]) : "Missing Form To";
+
+            }
+          
+          } else {
+           
+            _error_code = _config.ERRORS.INVALID_SUBJECT;
+            _error_code.Details = Utilities.formatString("No Token = %s in %s.", _token, _log.getSheetId());
+            
+          }
+          
+        } else {
+        
+          _error_code = _config.ERRORS.INVALID_ENTITY;
+          
+        }
+        
+      } else {
+      
+        _error_code = _config.ERRORS.INVALID_ACTION;
+        
+      }
+      
+    } else {
+    
+      _error_code = _config.ERRORS.INVALID_PARAM;
+      
+    }
+    
+  } else {
+  
+    _error_code = _config.ERRORS.NO_PARAM;
+    
+  }
+  
+  // -- Check for return and default to error if not found -- //
+  if (!_template) {
+    _template = HtmlService.createTemplateFromFile("Error");
+    _template.Code = _error_code ? "Error: " + 
+      Utilities.formatString("%s - %s < - - ÃÂ¯\\_(Ã£ÂÂ)_/ÃÂ¯ - - > %s", 
+      _error_code.Number, _error_code.Name, _error_code.Details ? _error_code.Details : "") : "";
+  }
+  // -- Return Result -- //
+  return _template.evaluate();
+
+};

@@ -1,0 +1,83 @@
+function getSingleSheet(id, name) {
+  return SpreadsheetApp.openById(id).getSheetByName(name);
+}
+
+function getHeader(sheet, name) {
+  return _getHeader(sheet.getRange(1, 1, 1, sheet.getLastColumn()).getValues()[0], name);
+}
+
+function _getHeader(headers, name) {
+  for (var i = 0; i < headers.length; i++) {
+    if (getStringValue(headers[i]).toUpperCase() == name.toUpperCase()) return (i + 1);
+  }
+  return 0;
+}
+
+function getMatchingRow(sheet, header_Name, row_Value) {
+  var _headers = sheet.getRange(1, 1, 1, sheet.getLastColumn()).getValues()[0];
+  var _col = _getHeader(_headers, header_Name);
+  if (_col > 0) {
+    var _values = sheet.getRange(1, _col, sheet.getLastRow(), 1).getValues();
+    for (var i = 0; i < _values.length; i++) {
+      if (getStringValue(_values[i][0]) == row_Value) {
+        var _ret = {__ROW : i + 1};
+        var _match = sheet.getRange(i + 1, 1, 1, sheet.getLastColumn()).getValues()[0];
+        for (var j = 0; j < _headers.length; j ++) {
+          var _header = getStringValue(_headers[j]);
+          if (_header) _ret[_header.toUpperCase()] = getValue(_match[j]);
+        }
+        return _ret;
+      }
+    }
+  }
+  return;
+}
+
+function getMatchingRows(sheet, header_Name, row_Value) {
+  var _ret = [];
+  var _headers = sheet.getRange(1, 1, 1, sheet.getLastColumn()).getValues()[0];
+  var _col = _getHeader(_headers, header_Name);
+  if (_col > 0) {
+    var _values = sheet.getRange(1, _col, sheet.getLastRow(), 1).getValues();
+    for (var i = 0; i < _values.length; i++) {
+      if (getStringValue(_values[i][0]) == row_Value) {
+        var __ret = {__ROW : i + 1};
+        var _match = sheet.getRange(i + 1, 1, 1, sheet.getLastColumn()).getValues()[0];
+        for (var j = 0; j < _headers.length; j ++) {
+          var _header = getStringValue(_headers[j]);
+          if (_header) __ret[_header.toUpperCase()] = getValue(_match[j]);
+        }
+        _ret.push(__ret);
+      }
+    }
+  }
+  return _ret;
+}
+
+function getStringValue(value) {
+  if (value) {
+    if (typeof value === "string") {
+      return value;
+    } else if (Object.prototype.toString.call(value) === "[object Array]") {
+      return getStringValue(value[0]);
+    } else {
+      return String(value); 
+    }
+  } else {
+    return "";
+  }
+ 
+}
+    
+function getValue(value) {
+  if (value) {
+    if (Object.prototype.toString.call(value) === "[object Array]") {
+      return getValue(value[0]);
+    } else {
+      return value; 
+    }
+  } else {
+    return "";
+  }
+ 
+}

@@ -1,0 +1,21 @@
+function insert_LogEntry(log, id, from, to, form_Form, form_To, action, token) {
+  
+  if (log) {
+  
+    log.appendRow([
+      id,
+      '=IF(LEN(INDIRECT("$A"&ROW()))>0,INDEX(NQTs!$B:$B, MATCH(INDIRECT("$A"&ROW()),NQTs!$A:$A, 0), 1),"")',
+      '=IF(LEN(INDIRECT("$A"&ROW()))>0,INDEX(NQTs!$C:$C, MATCH(INDIRECT("$A"&ROW()),NQTs!$A:$A, 0), 1),"")',
+      moment().toDate(),
+      from,
+      to,
+      form_Form,
+      form_To,
+      action,
+      token,
+      '=IF(LEN(INDIRECT("$J"&ROW()))>0, CONCATENATE(IFERROR(INDEX(Config!$B:$B, MATCH("URL", Config!$A:$A,0), 1), "http://URL"),"?o=", INDIRECT("$C"&ROW()), "&t=",INDIRECT("$J"&ROW())), "")'
+    ]);
+  
+  }
+  
+}

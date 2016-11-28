@@ -1,0 +1,858 @@
+var Drive_API_Version = "0.9.8";
+
+// *** PERMISSIONS *** //
+Permissions = function() {
+
+  // -- Returns an instance of Permissions if required -- //
+  if (!(this instanceof Permissions)) {
+    return new Permissions;
+  }
+  
+  // -- Internal Enums -- //
+  _Fields = {
+    ROLE : "role",
+    TYPE : "type",
+    VALUE : "value",
+    WITH_LINK : "withLink",
+    EMAIL_ADDRESS : "emailAddress",
+    SEND_NOTIFICATION_EMAILS : "sendNotificationEmails"
+  }
+  // -- Internal Enums -- //
+
+  // -- Internal Variables -- //
+  var _id;
+  var _notify = false;
+  var _perms;
+  var _perms_Length = 0;
+  // -- Internal Variables -- //
+  
+  // -- Internal Functions -- //
+  function _addPerm(value) {
+    if (value) {
+      _perms.push(value); // Need to check/update permission?
+      _perms_Length += 1;
+    }
+  }
+  
+  function _removePerm(id) {
+    for (var i = 0; i < _perms_Length; i++) {
+      if (_perms[i].id == id) {
+        _perms.slice(i, 1);
+        _perms_Length -= 1;
+        break;
+      }
+    }
+  }
+  
+  function _getPerms() {
+    _perms = Drive.Permissions.list(_id).items;
+    if (_perms) _perms_Length = _perms.length;
+  }
+  
+  function _checkFor(parameters) {
+    for (var i = 0; i < _perms_Length; i++) {
+      var matches = true;
+      var perm = _perms[i];
+      for (var parameter in parameters) {
+        if (!perm.hasOwnProperty(parameter) || perm[parameter] != parameters[parameter]) {
+          matches = false;
+          break;
+        }
+      }
+      if (matches) return perm;
+    }
+  }
+  
+  function _list(parameters) {
+    var _return = []
+    for (var i = 0; i < _perms_Length; i++) {
+      var matches = true;
+      var perm = _perms[i];
+      for (var parameter in parameters) {
+        if (!perm.hasOwnProperty(parameter) || perm[parameter] != parameters[parameter]) {
+          matches = false;
+          break;
+        }
+      }
+      if (matches) return perm;
+    }
+  }
+  
+  function _add(role, type, value) {
+    try {
+      var perm = Drive.Permissions.insert(
+        {
+          "role" : role,
+          "type" : type,
+          "value" : value
+        },
+        _id,
+        {
+          "sendNotificationEmails" : _notify
+        }
+      )
+      if (perm) {
+        _addPerm(perm);
+        return perm;
+      }
+    } catch(e) {
+      Logger.log("Exception thrown whilst executing '_add': " + e);
+    }
+  }
+  
+  function _set(role, type, value) {
+     if (!value && type == Permissions.Type.DOMAIN) value = Session.getActiveUser().getEmail().split("@")[1];
+     try {
+      var perm = Drive.Permissions.insert(
+        {
+          "role" : role,
+          "type" : type,
+          "value" : value,
+          "withLink" : true
+        },
+        _id,
+        {
+          "sendNotificationEmails" : _notify
+        }
+      )
+      if (perm) {
+        _addPerm(perm);
+        return perm;
+      }
+    } catch(e) {
+      Logger.log("Exception thrown whilst executing '_set': " + e);
+    }
+  }
+  
+  function _remove(parameters) {
+    var perm = _checkFor(parameters);
+    if (perm) {
+      try {
+        Drive.Permissions.remove(_id, perm.id)
+        _removePerm(perm.id);
+        return true
+      } catch(e) {
+        Logger.log("Exception thrown whilst executing '_remove': " + e);
+        return false;
+      }
+    } else {
+      return false;
+    }
+  }
+  // -- Internal Functions -- //
+
+  // -- External Visibility -- //
+  return {
+
+    // -- External Enums -- //
+    Role : {
+      READER : "reader",
+      COMMENTER : "commenter",
+      WRITER : "writer",
+      OWNER : "owner"
+    },
+    
+    Type : {
+      ANYONE : "anyone",
+      DOMAIN : "domain",
+      GROUP : "group",
+      USER : "user"
+    },
+    // -- External Enums -- //
+    
+    // -- External Functions -- //
+    /**
+    * Fetch permissions for Google Drive object with supplied ID.
+    *
+    * <h3>Examples:</h3>
+    * <pre>
+    * Permissions.fetch("xxxxx-xxxxxxxxxxxxxx");
+    * </pre>
+    *
+    * @param {String} id Id of the object to get/manipulate permissions for.
+    * @return {Object} This permissions wrapper object, for chaining.
+    */
+    fetch : function(id) {
+      _id = id;
+      _getPerms();
+      return this;
+    },
+    
+    /**
+    * Turn ON Email Notifications for Permission Grants (default is off/silent).
+    *
+    * <h3>Examples:</h3>
+    * <pre>
+    * Permissions.notify();
+    * </pre>
+    *
+    * @return {Object} This permissions wrapper object, for chaining.
+    */
+    notify : function() {
+      _notify = true;
+      return this;
+    },
+    
+    /**
+    * Turn OFF Email Notifications for Permission Grants (default is off/silent).
+    *
+    * <h3>Examples:</h3>
+    * <pre>
+    * Permissions.silence();
+    * </pre>
+    *
+    * @return {Object} This permissions wrapper object, for chaining.
+    */
+    silence : function() {
+      _notify = false;
+      return this;
+    },
+    
+    /**
+    * Check whether object has link permission matching supplied parameters.
+    *
+    * <h3>Examples:</h3>
+    * <pre>
+    * Permissions.hasLinkPermission(Permissions.Role.READER, Permissions.Type.ANYONE);
+    * </pre>
+    *
+    * @param {Permissions.Role} role The Role of the Permission (READER, COMMENTER, WRITER, OWNER) to check for.
+    * @param {Permissions.Type} type The Type of the Permission (ANYONE, DOMAIN, GROUP, USER) to check for (only ANYONE and DOMAIN are really relevant).
+    * @return {Boolean} Whether the permission explicitly exists (e.g. a read permission for 'DOMAIN' will return false if a permission for 'ANYONE' is there, even if it's implied).
+    */
+    hasLinkPermission : function(role, type) {
+      return Boolean(_checkFor({"role" : role, "type" : type, "withLink" : true}));
+    },
+
+    /**
+    * Check whether object has an 'ANYONE' link permission matching supplied role.
+    *
+    * <h3>Examples:</h3>
+    * <pre>
+    * Permissions.hasAnyoneLinkPermission(Permissions.Role.READER);
+    * </pre>
+    *
+    * @param {Permissions.Role} role The Role of the Permission (READER, COMMENTER, WRITER, OWNER) to check for.
+    * @return {Boolean} Whether the permission explicitly exists.
+    */
+    hasAnyoneLinkPermission : function(role) {
+      return Boolean(_checkFor({"role" : role, "type" : this.Type.ANYONE, "withLink" : true}));
+    },
+    
+    /**
+    * Check whether object has an 'DOMAIN' link permission matching supplied role.
+    *
+    * <h3>Examples:</h3>
+    * <pre>
+    * Permissions.hasDomainLinkPermission(Permissions.Role.READER);
+    * </pre>
+    *
+    * @param {Permissions.Role} role The Role of the Permission (READER, COMMENTER, WRITER, OWNER) to check for.
+    * @return {Boolean} Whether the permission explicitly exists.
+    */
+    hasDomainLinkPermission : function(role) {
+      return Boolean(_checkFor({"role" : role, "type" : this.Type.DOMAIN, "withLink" : true}));
+    },
+
+    /**
+    * Check whether object has an 'DOMAIN' link permission matching supplied role and domain name.
+    *
+    * <h3>Examples:</h3>
+    * <pre>
+    * Permissions.hasDomainLinkPermission(Permissions.Role.READER, "abc.xyz");
+    * </pre>
+    *
+    * @param {Permissions.Role} role The Role of the Permission (READER, COMMENTER, WRITER, OWNER) to check for.
+    * @param {String} role The Domain Name of the Permission to check for.
+    * @return {Boolean} Whether the permission explicitly exists.
+    */
+    hasNamedDomainLinkPermission : function(role, domain) {
+      return Boolean(_checkFor({"role" : role, "type" : this.Type.DOMAIN, "withLink" : true, "domain" : domain}));
+    },
+    
+    /**
+    * Check whether object has a user permission matching supplied parameters.
+    *
+    * <h3>Examples:</h3>
+    * <pre>
+    * Permissions.hasUserPermission(Permissions.Role.READER, "me@here.com");
+    * </pre>
+    *
+    * @param {Permissions.Role} role The Role of the Permission (READER, COMMENTER, WRITER, OWNER) to check for.
+    * @param {String} user The Email Address/Username of the user to check for.
+    * @return {Boolean} Whether the permission explicitly exists (e.g. will return false even if an ANYONE or DOMAIN permission exists).
+    */
+    hasUserPermission : function(role, user) {
+      return Boolean(_checkFor({"role" : role, "type" : this.Type.USER, "emailAddress" : user}));
+    },
+    
+    /**
+    * Set an explicit link permission for the object.
+    *
+    * <h3>Examples:</h3>
+    * <pre>
+    * Permissions.setLinkPermission(Permissions.Role.READER, Permissions.Type.ANYONE);
+    * </pre>
+    *
+    * @param {Permissions.Role} role The Role of the Permission (READER, COMMENTER, WRITER, OWNER) to set.
+    * @param {Permissions.Type} type The Type of the Permission (ANYONE, DOMAIN, GROUP, USER) to set (only ANYONE and DOMAIN are really relevant).
+    * @return {Boolean} Whether the permission was set.
+    */
+    setLinkPermission : function(role, type) {
+      return Boolean(_set(role, type));
+    },
+
+    /**
+    * Set an explicit link 'ANYONE' permission for the object.
+    *
+    * <h3>Examples:</h3>
+    * <pre>
+    * Permissions.setAnyoneLinkPermission(Permissions.Role.READER);
+    * </pre>
+    *
+    * @param {Permissions.Role} role The Role of the Permission (READER, COMMENTER, WRITER, OWNER) to set.
+    * @return {Boolean} Whether the permission was set.
+    */
+    setAnyoneLinkPermission : function(role) {
+      return Boolean(_set(role, this.Type.ANYONE));
+    },
+    
+    /**
+    * Set an explicit link 'DOMAIN' permission for the object.
+    *
+    * <h3>Examples:</h3>
+    * <pre>
+    * Permissions.setDomainLinkPermission(Permissions.Role.READER);
+    * </pre>
+    *
+    * @param {Permissions.Role} role The Role of the Permission (READER, COMMENTER, WRITER, OWNER) to set.
+    * @return {Boolean} Whether the permission was set.
+    */
+    setDomainLinkPermission : function(role) {
+      return Boolean(_set(role, this.Type.DOMAIN));
+    },
+    
+    /**
+    * Set an explicit link 'DOMAIN' permission for the object.
+    *
+    * <h3>Examples:</h3>
+    * <pre>
+    * Permissions.setDomainLinkPermission(Permissions.Role.READER);
+    * </pre>
+    *
+    * @param {Permissions.Role} role The Role of the Permission (READER, COMMENTER, WRITER, OWNER) to set.
+    * @return {Boolean} Whether the permission was set.
+    */
+    setNamedDomainLinkPermission : function(role, domain) {
+      return Boolean(_set(role, this.Type.DOMAIN, domain));
+    },
+    
+    /**
+    * Removes an explicit link permission for the object.
+    *
+    * <h3>Examples:</h3>
+    * <pre>
+    * Permissions.removeLinkPermission(Permissions.Role.READER, Permissions.Type.ANYONE);
+    * </pre>
+    *
+    * @param {Permissions.Role} role The Role of the Permission (READER, COMMENTER, WRITER, OWNER) to remove.
+    * @param {Permissions.Type} type The Type of the Permission (ANYONE, DOMAIN, GROUP, USER) to remove (only ANYONE and DOMAIN are really relevant).
+    * @return {Boolean} Whether the permission was removed.
+    */
+    removeLinkPermission : function(role, type) {
+      return Boolean(_remove({"role" : role, "type" : type, "withLink" : true}));
+    },
+
+    /**
+    * Remove an explicit link 'ANYONE' permission for the object.
+    *
+    * <h3>Examples:</h3>
+    * <pre>
+    * Permissions.removeAnyoneLinkPermission(Permissions.Role.READER);
+    * </pre>
+    *
+    * @param {Permissions.Role} role The Role of the Permission (READER, COMMENTER, WRITER, OWNER) to remove.
+    * @return {Boolean} Whether the permission was removed.
+    */
+    removeAnyoneLinkPermission : function(role) {
+      return Boolean(_remove({"role" : role, "type" : this.Type.ANYONE, "withLink" : true}));
+    },
+    
+    /**
+    * Remove a 'DOMAIN' link permission matching supplied role.
+    *
+    * <h3>Examples:</h3>
+    * <pre>
+    * Permissions.removeDomainLinkPermission(Permissions.Role.READER);
+    * </pre>
+    *
+    * @param {Permissions.Role} role The Role of the Permission (READER, COMMENTER, WRITER, OWNER) to remove.
+    * @return {Boolean} Whether the permission was removed.
+    */
+    removeDomainLinkPermission : function(role) {
+      return Boolean(_remove({"role" : role, "type" : this.Type.DOMAIN, "withLink" : true}));
+    },
+    
+    /**
+    * Remove a 'DOMAIN' link permission matching supplied role and domain.
+    *
+    * <h3>Examples:</h3>
+    * <pre>
+    * Permissions.removeNamedDomainLinkPermission(Permissions.Role.READER, "abc.xyz");
+    * </pre>
+    *
+    * @param {Permissions.Role} role The Role of the Permission (READER, COMMENTER, WRITER, OWNER) to remove.
+    * @param {String} domain The domain to remove.
+    * @return {Boolean} Whether the permission was removed.
+    */
+    removeNamedDomainLinkPermission : function(role, domain) {
+      return Boolean(_remove({"role" : role, "type" : this.Type.DOMAIN, "withLink" : true, "domain" : domain}));
+    },
+    
+    /**
+    * Adds an explicit user permission to an object.
+    *
+    * <h3>Examples:</h3>
+    * <pre>
+    * Permissions.addUserPermission(Permissions.Role.READER, "me@here.com");
+    * </pre>
+    *
+    * @param {Permissions.Role} role The Role of the Permission (READER, COMMENTER, WRITER, OWNER) to add.
+    * @param {String} user The Email Address/Username of the user to add.
+    * @return {Boolean} Whether the permission was added.
+    */
+    addUserPermission : function(role, user) {
+      return Boolean(_add(role, this.Type.USER, user));
+    },
+    
+    /**
+    * Adds an explicit user permission to an object.
+    *
+    * <h3>Examples:</h3>
+    * <pre>
+    * Permissions.hasUserPermission(Permissions.Role.READER, "me@here.com");
+    * </pre>
+    *
+    * @param {Permissions.Role} role The Role of the Permission (READER, COMMENTER, WRITER, OWNER) to remove.
+    * @param {String} user The Email Address/Username of the user to remove.
+    * @return {Boolean} Whether the permission was removed.
+    */
+    removeUserPermission : function(role, user) {
+      return Boolean(_remove({"role" : role, "type" : this.Type.USER, "emailAddress" : user}));
+    }
+    // -- External Functions -- //
+  };
+  // -- External Visibility -- //
+
+}
+// *** PERMISSIONS *** //
+
+
+
+// *** FOLDERS *** //
+Folders = function() {
+
+  // -- Returns an instance of Folders if required -- //
+  if (!(this instanceof Folders)) {
+    return new Folders;
+  }
+  
+  // -- Internal Variables -- //
+  var _id;
+  // -- Internal Variables -- //
+  
+  // -- External Visibility -- //
+  return {
+
+    // -- External Enums -- //
+    Colours : {
+      CORAL_TREE : "#ac725e",
+      JAPONICA : "#d06b64",
+      RED_ORANGE : "#f83a22",
+      SUNSET_ORANGE : "#fa573c",
+      BURNT_ORANGE : "#ff7537",
+      YELLOW_ORANGE : "#ffad46",
+      KOURNIKOVA : "#fad165",
+      SWEET_CORN : "#fbe983",
+      CONIFER : "#b3dc6c",
+      ATLANTIS : "#7bd148",
+      MOUNTAIN_MEADOW : "#16a765",
+      SHAMROCK : "#42d692",
+      RIPTIDE : "#92e1c0",
+      CHARLOTTE : "#9fe1e7",
+      TROPICAL_BLUE : "#9fc6e7",
+      ROYAL_BLUE : "#4986e7",
+      LIGHT_SLATE_BLUE : "#9a9cff",
+      MAUVE : "#b99aff",
+      MEDIUM_PURPLE : "#a47ae2",
+      MEDIUM_ORCHID : "#cd74e6",
+      PERSIAN_PINK : "#f691b2",
+      CAREYS_PINK : "#cca6ac",
+      ALTO : "#cabdbf",
+      SUVA_GREY : "#8f8f8f"
+    },
+    // -- External Enums -- //
+    
+    // -- External Functions -- //
+    /**
+    * Fetch folder object from Google Drive with supplied ID.
+    *
+    * <h3>Examples:</h3>
+    * <pre>
+    * Folders.fetch("xxxxx-xxxxxxxxxxxxxx");
+    * </pre>
+    *
+    * @param {String} id Id of the folder to get.
+    * @return {Object} This folder wrapper object, for chaining.
+    */
+    fetch : function(id) {
+      _id = id;
+      if (Drive.Files.get(_id).mimeType != "application/vnd.google-apps.folder") throw "Not a folder";
+      return this;
+    },
+    
+    /**
+    * Create folder object in Google Drive with supplied Name.
+    *
+    * <h3>Examples:</h3>
+    * <pre>
+    * Folders.create("My New Folder");
+    * </pre>
+    *
+    * @param {String} name Name of the folder to create.
+    * @param {String} description Description to create the folder with.
+    * @param {Folders.Colour} colour Colour to create the folder with.
+    * @return {Object} This folder wrapper object, for chaining.
+    */
+    create : function(name, description, colour) {
+      return this.fetch(Drive.Files.insert(
+        {
+          "title" : name,
+          "mimeType" : "application/vnd.google-apps.folder",
+          "folderColorRgb" : colour ? colour : this.Colours.ALTO,
+          "description" : description,
+        }
+      ).id);
+    },
+    
+    /**
+    * Colour folder object from Google Drive with supplied ID.
+    *
+    * <h3>Examples:</h3>
+    * <pre>
+    * Folders.setColour(Folders.Colours.SUNSET_ORANGE);
+    * </pre>
+    *
+    * @param {Folders.Colour} colour Colour to set the folder.
+    * @return {Boolean} Whether the colour set was successful.
+    */
+    setColour : function(colour) {
+      var resp = Drive.Files.update({"folderColorRgb" : colour}, _id);
+      return Boolean(resp);
+    },
+    
+    /**
+    * Gets the folder as an Objects to Manipulate
+    *
+    * <h3>Examples:</h3>
+    * <pre>
+    * Folders.asObjects();
+    * </pre>
+    *
+    * @return {Objects} The Objects object.
+    */
+    asObjects : function() {
+      return Objects().fetch(_id);
+    },
+    
+    /**
+    * Gets the folder as a Permissions to Manipulate
+    *
+    * <h3>Examples:</h3>
+    * <pre>
+    * Folders.asPermissions();
+    * </pre>
+    *
+    * @return {Permissions} The Permissions object.
+    */
+    asPermissions : function() {
+      return Permissions().fetch(_id);
+    },
+
+  }
+  // -- External Visibility -- //
+    
+}
+// *** FOLDERS *** //
+
+
+
+// *** OBJECTS *** //
+Objects = function() {
+
+  // -- Returns an instance of Objects if required -- //
+  if (!(this instanceof Objects)) {
+    return new Objects;
+  }
+  
+  // -- Internal Variables -- //
+  var _id;
+  var _object;
+  // -- Internal Variables -- //
+  
+  // -- Internal Functions -- //
+  function _getObject() {
+    _object = Drive.Files.get(_id);
+  }
+  // -- Internal Functions -- //
+  
+  // -- External Visibility -- //
+  return {
+
+    // -- External Enums -- //
+    Property_Visibility : {
+      PUBLIC : "PUBLIC",
+      PRIVATE : "PRIVATE",
+    },
+    // -- External Enums -- //
+    
+    // -- External Functions -- //
+    /**
+    * Fetch object from Google Drive with supplied ID.
+    *
+    * <h3>Examples:</h3>
+    * <pre>
+    * Objects.fetch("xxxxx-xxxxxxxxxxxxxx");
+    * </pre>
+    *
+    * @param {String} id Id of the folder to get.
+    * @return {Object} This Objects wrapper object, for chaining.
+    */
+    fetch : function(id) {
+      _id = id;
+      _getObject();
+      if (!_object && !_object.id) throw "Object doesn't seem to exist!";
+      return this;
+    },
+    
+    /**
+    * Colour folder object from Google Drive with supplied ID.
+    *
+    * <h3>Examples:</h3>
+    * <pre>
+    * Folders.setColour(Folders.Colours.SUNSET_ORANGE);
+    * </pre>
+    *
+    * @param {Folders.Colour} colour Colour to set the folder.
+    * @return {Boolean} Whether the colour set was successful.
+    */
+    refresh : function() {
+      _getObject();
+      return this;
+    },
+    
+    /**
+    * Get the id of the object.
+    *
+    * <h3>Examples:</h3>
+    * <pre>
+    * Objects.getId();
+    * </pre>
+    *
+    * @return {String} The Id of the object.
+    */
+    getId : function() {
+      if (_object) return _object.id;
+    },
+    
+    /**
+    * Get the name of the object.
+    *
+    * <h3>Examples:</h3>
+    * <pre>
+    * Objects.getName();
+    * </pre>
+    *
+    * @return {String} The Name/Title of the object.
+    */
+    getName : function() {
+      if (_object) return _object.title;
+    },
+    
+    /**
+    * Get the url of the object.
+    *
+    * <h3>Examples:</h3>
+    * <pre>
+    * Objects.getUrl();
+    * </pre>
+    *
+    * @return {String} The Url of the object.
+    */
+    getUrl : function() {
+      if (_object) return _object.selfLink;
+    },
+    
+    /**
+    * Get the description of the object.
+    *
+    * <h3>Examples:</h3>
+    * <pre>
+    * Objects.getDescription();
+    * </pre>
+    *
+    * @return {String} The Description of the object.
+    */
+    getDescription : function() {
+      if (_object) return _object.description;
+    },
+    
+    /**
+    * Set the description of the object.
+    *
+    * <h3>Examples:</h3>
+    * <pre>
+    * Objects.setDescription("A great Google Drive Object");
+    * </pre>
+    *
+    * @param {String} The Description of the object.
+    * @return {Boolean} Whether the description set was successful.
+    */
+    setDescription : function(description) {
+      var resp = Drive.Files.update({"description" : description}, _id);
+      return Boolean(resp);
+    },
+
+    /**
+    * Get the colour of the object.
+    *
+    * <h3>Examples:</h3>
+    * <pre>
+    * Objects.getColour();
+    * </pre>
+    *
+    * @return {String} The Colour of the object (if it is a folder).
+    */
+    getColour : function() {
+      if (_object) return _object.folderColorRgb ? _object.folderColorRgb : "";
+    },
+    
+    /**
+    * Get a property of the object.
+    *
+    * <h3>Examples:</h3>
+    * <pre>
+    * Objects.getProperty();
+    * </pre>
+    *
+    * 
+    * @param {String} key Key for the property to get.
+    * @param {Objects.Property_Visibility} visibility Visibility for the property to get.
+    * @return {Object} The Value of the object.
+    */
+    getProperty : function(key, visibility) {
+      if (_object) {
+        var _value = Drive.Properties.get({
+          "key" : key,
+          "visibility" : visibility
+        }, _object.id);
+        if (_value) return _value.value;
+      }
+      return;
+    },
+    
+    /**
+    * Set a property on the object.
+    *
+    * <h3>Examples:</h3>
+    * <pre>
+    * Objects.setProperty();
+    * </pre>
+    *
+    * 
+    * @param {String} key Key for the property to add/update.
+    * @param {String} value Value for the property to add/update.
+    * @param {Objects.Property_Visibility} visibility Visibility for the property to add/update.
+    * @return {Object} This Objects wrapper object, for chaining.
+    */
+    setProperty : function(key, value, visibility) {
+      if (_object) {
+        Drive.Properties.insert({
+          "key" : key,
+          "value" : value,
+          "visibility" : visibility
+        }, _object.id);
+      }
+      return this;
+    },
+    
+    /**
+    * Delete a property on the object.
+    *
+    * <h3>Examples:</h3>
+    * <pre>
+    * Objects.deleteProperty();
+    * </pre>
+    *
+    * 
+    * @param {String} key Key for the property to delete.
+    * @return {Object} This Objects wrapper object, for chaining.
+    */
+    deleteProperty : function(key) {
+      if (_object) {
+        Drive.Properties.remove(_object.id, key);
+      }
+      return this;
+    },
+    
+    /**
+    * Gets the data (property names & values) of the object.
+    *
+    * <h3>Examples:</h3>
+    * <pre>
+    * Objects.getData();
+    * </pre>
+    *
+    * 
+    * @return {Object} This Data of the object.
+    */
+    getData : function() {
+      if (_object) {
+        var _value = Drive.Properties.list(_object.id);
+        if (_value) {
+          var _return = {}
+          for (var i = 0; i < _value.items.length; i++) {
+            _return[_value.items[i].key] = _value.items[i].value;
+          }
+          return _return;
+        }
+      }
+      return;
+    },
+    
+    // TODO:  and / setData / getData?
+    
+    /**
+    * Moves the object to a particular folder.
+    *
+    * <h3>Examples:</h3>
+    * <pre>
+    * Objects.move("xxxxx-xxxxxxxxxxxxxx");
+    * </pre>
+    *
+    * 
+    * @param {String} key Id for the destination folder.
+    * @return {Object} This Objects wrapper object, for chaining.
+    */
+    move : function(folder_Id) {
+      for (var i = 0; i < _object.parents.length; i++) {
+        Drive.Parents.remove(_id, _object.parents[i].id);
+      }
+      Drive.Parents.insert({id : folder_Id}, _id);
+      return this.refresh();
+    },
+  }
+  // -- External Visibility -- //
+    
+}
+// *** OBJECTS *** //

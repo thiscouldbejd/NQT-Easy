@@ -1,0 +1,164 @@
+<style>
+
+  // == Media Queries == //
+  
+  @media screen and (min-width: 992px) {
+	.sidebar {
+		text-align: right;
+	}
+	ul.pane {
+		margin-top: 3em;
+	}
+  }
+    
+  @media screen and (max-width: 991px) {
+    /* -- Google Drive Picker Mobile Fix -- */
+    .picker.modal-dialog {
+      max-width: 356px !important;
+    }
+    .picker.modal-dialog-content.picker-dialog-content{
+       max-width: 356px !important;
+    }
+  }
+
+  // == Media Queries == //
+
+
+  // == General Styling == //
+
+  .container-fluid, .container {
+    padding : 2em 1em;
+  }
+  
+  .btn-group + textarea {
+    margin-top: 0.2em;
+  }
+  
+  input.error, input[readonly].error, input[readonly="readonly"].error, textarea[readonly].error, textarea[readonly="readonly"].error {
+   color: #fff;
+   background-color: #ff5555;
+  }
+  input.error::-webkit-input-placeholder { color: #ddd; }
+  input.error:-moz-placeholder { color: #ddd; }
+  input.error::-moz-placeholder { color: #ddd; }
+  input.error:-ms-input-placeholder { color: #ddd; }
+  
+  .optional {
+	background-color: #f8fec7;
+  }
+
+  .dim {
+	opacity: 0.25;
+  }
+
+  .high-dim {
+	opacity: 0.1;
+  }
+
+  .number-label {
+	display: inline;
+	font-weight: 600;
+  }
+
+  .evidence {
+	padding-top: 0.5em;
+	padding-bottom: 0.5em;
+  }
+
+  .evidence-list-item + .evidence-list-item {
+	margin-top: 0.3em;
+  }
+
+  textarea.resizable {
+	width: 100%;
+	max-width: 100%;
+	resize: vertical;
+  }
+
+  .target-list-item + .target-list-item {
+	margin-top: 0.7em;
+  }
+
+  .target-list-item a, .target-list-item p {
+	display: inline;
+  }
+
+  .pad-left {
+	padding-left: 0.3em;
+  }
+
+  .pad-right {
+	padding-right: 0.3em;
+  }
+
+  .pad-left-more {
+	padding-left: 3em;
+  }
+
+  .pad-right-more {
+	padding-right: 3em;
+  }
+
+  .file-icon {
+	height: 1em;
+  }
+
+  .success-icon {
+	color: green;
+  }
+
+  .delete-icon, .failure-icon {
+	color: red;
+  }
+
+  .status {
+	margin-left: 10px;
+	font-size: 2.5em;
+	text-align: center;
+	vertical-align: middle;
+  }
+
+  .btn-primary.black {
+	background-image: linear-gradient(to bottom,#444 0,#000 100%);
+  }
+
+  .btn-primary.black,
+  .btn-primary.black:hover,
+  .btn-primary.black:active,
+  .btn-primary.black:visited,
+  .btn-primary.black:focus {
+    background-color: #000000 !important;
+    border-color: #000000 !important;
+  }
+  
+  .toggle, .action {
+	cursor: pointer;
+	color: #666666;
+  }
+
+  .toggle:hover, .toggle:hover > span, .action:hover, .action:hover > span {
+	font-weight: 500;
+	color: #222222;
+  }
+  
+  .well.light {
+	border: none;
+	color: #000;
+	background-image: linear-gradient(to bottom,#c3c2cf 0,#fefefe 100%);
+	padding-bottom: 1em;
+  }
+  
+  .shorten {
+	max-width: 80%;
+  }
+
+  .previous-lock {
+   color: #aaa;
+  }
+  
+  .previous .form-group {
+    margin-bottom: 5px;
+  }
+  // == General Styling == //
+
+</style>

@@ -1,0 +1,120 @@
+// == Notify a User of a Form Rejection == //
+function notifyReject(rejection, config) {
+  
+  // -- Create Email -- //
+  var template = HtmlService.createTemplateFromFile(config.EMAILS.REJECT.Name);
+  template.Subject =  Utilities.formatString(config.EMAILS.REJECT.Subject, rejection.Subject);
+  template.Title = "You've been returned a rejected form";
+  template.Url = rejection.Url;
+  template.Organisation = config.ORGANISATION;
+  template.Address = config.ADDRESS;
+  template.From = rejection.From;
+  template.Details = rejection.Details;
+  template.Message = rejection.Message;
+  
+  var html = template.evaluate().getContent();
+  // -- Create Email -- //
+  
+  // -- Send Email -- //
+  GmailApp.sendEmail(
+    rejection.To,
+    template.Subject,
+    "", // Should we provide a plain text version instead?
+    {
+      name : config.APPLICATION,
+      htmlBody: html,
+    }
+  );
+      
+  return true;
+  // -- Send Email -- //
+}
+
+
+// == Notify a User of a Step/Form Submission == //
+function notifyStep(step, config) {
+  
+  // -- Create Email -- //
+  var template = HtmlService.createTemplateFromFile(config.EMAILS.STEP.Name);
+  template.Subject = Utilities.formatString(config.EMAILS.STEP.Subject, step.Subject);
+  template.Title = "You've been sent a form";
+  template.Url = step.Url;
+  template.Organisation = config.ORGANISATION;
+  template.Address = config.ADDRESS;
+  template.From = step.From;
+  template.Details = step.Details;
+  
+  var html = template.evaluate().getContent();
+  // -- Create Email -- //
+  
+  // -- Send Email -- //
+  GmailApp.sendEmail(
+    step.To,
+    template.Subject,
+    "", // Should we provide a plain text version instead?
+    {
+      name : config.APPLICATION,
+      htmlBody: html,
+      bcc: step.Copies ? step.Copies : "",
+    }
+  );
+      
+  return true;
+  // -- Send Email -- //
+
+}
+
+
+// == Notify a User of a Cycle Complete == //
+function notifyComplete(completion, config) {
+  
+  // -- Create Email -- //
+  var template = HtmlService.createTemplateFromFile(config.EMAILS.COMPLETE.Name);
+  template.Subject = Utilities.formatString(config.EMAILS.COMPLETE.Subject, completion.Subject);
+  template.Title = "Cycle has been completed";
+  template.Url = completion.Url;
+  template.Organisation = config.ORGANISATION;
+  template.Address = config.ADDRESS;
+  template.From = completion.From;
+  template.Details = completion.Details;
+  
+  var html = template.evaluate().getContent();
+  // -- Create Email -- //
+  
+  // -- Send Email -- //
+  if (completion.Attachment) {
+  
+    // -- Send with Attachment -- //
+    GmailApp.sendEmail(
+      completion.To,
+      template.Subject,
+      "", // Should we provide a plain text version instead?
+      {
+        attachments: [completion.Attachment],
+        name : config.APPLICATION,
+        htmlBody: html,
+        bcc: completion.Copies ? completion.Copies : "",
+      }
+    );
+    
+  } else {
+    
+    // -- Send without Attachment -- //
+    GmailApp.sendEmail(
+      completion.To,
+      template.Subject,
+      "", // Should we provide a plain text version instead?
+      {
+        name : config.APPLICATION,
+        htmlBody: html,
+        bcc: completion.Copies ? completion.Copies : "",
+      }
+    );
+    
+  }
+  
+      
+  return true;
+  // -- Send Email -- //
+
+}

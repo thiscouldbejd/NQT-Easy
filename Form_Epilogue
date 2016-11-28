@@ -1,0 +1,237 @@
+<div id="submission" class="data" style="display: none;">
+  
+  <div class="row">
+  
+    <div class="col-md-9">
+  
+      <div class="panel panel-primary">
+  
+        <div class="panel-heading">
+    
+          <h4 class="panel-title">
+            <span class="glyphicon glyphicon-send" style="padding-right: 0.6em;"></span>
+            Save &amp; Submit
+          </h4>
+
+        </div>
+  	
+        <div class="panel-body">
+          
+          <fieldset>
+          
+            <!-- Authorisation Confirmation --><!-- Checkbox input-->
+            <div class="form-group pre_submit" style="display: none;">
+              <label class="col-md-3 control-label" for="submission_confirmation">Declaration of Authorisation</label> 
+              <div class="col-md-9">
+                <div class="input-group">
+                  <span class="input-group-addon">
+                    <input id="submission_confirmation" name="submission_confirmation" type="checkbox" aria-label="Confirmation of Authorisation" data-field="Authorisation Confirmed" data-target="submission_declaration"
+              data-value="I confirm that I am authorising the submission of this form, and that the information I have provided above is both accurate and correct." data-order="996">
+                  </span>
+                  <textarea id="submission_declaration" name="submission_declaration" class="form-control resizable" aria-label="Declaration of Authorisation" readonly="readonly" data-field="Authorisation Statement" data-display="true" rows="2" data-order="997"></textarea>
+                </div>
+              </div>
+            </div>
+              
+            <!-- Submitter Name --><!-- Text input-->
+            <div class="form-group pre_submit" style="display: none;">
+              <label class="col-md-3 control-label" for="submission_name">Your Full Name</label>  
+              <div class="col-md-9">
+                <input id="submission_name" name="submission_name" type="text" placeholder="Name" class="form-control input-md" data-field="Authorised By Name" data-display="true" data-order="998" />
+                <i id="submission_name-glyph" class="form-control-feedback glyphicon glyphicon-user pad-right-more"></i>
+              </div>
+            </div>
+      
+            <!-- Next Node --><!-- Text input-->
+            <div class="form-group pre_submit" style="display: none;">
+              <label class="col-md-3 control-label" for="submission_next">Next Recipient of this Form</label>
+              <div class="col-md-9">
+                <input id="submission_next" name="submission_next" type="email" placeholder="next@school.org" class="form-control input-md" data-field="Next Person" data-order="999" />
+                <i id="submission_next-glyph" class="form-control-feedback glyphicon glyphicon-envelope pad-right-more"></i>
+                <span class="help-block">To confirm your authorisation of this form, and to send it to the next person for processing, please enter your name above, and the email address of the recipient to which the form should next be sent.</span>
+              </div>
+            </div>
+      
+            <!-- Header for Process Control (Save / Submit) --><!-- Button (Double) -->
+            <div class="form-group col-md-12">
+              <button id="save" class="action btn material-button material-button-info">Save</button>
+              <button id="submit" class="action btn material-button material-button-success">Submit</button>
+              <span class="help-block"><strong>Save</strong> this form at any time. Return to it using the link that you have already recieved by email.</span>
+            </div>
+  
+          </fieldset>
+          
+        </div>
+  
+      </div>
+  
+    </div>
+
+  </div>
+  
+</div>
+
+<script type="text/javascript">
+
+  $(function() {
+  
+    // -- Form Process Save / Submit Methods -- //
+    $("#submission #save").click(function(e) {
+      
+      // -- Prevent Form Validation -- //
+      e.preventDefault();
+      
+      var _ctrl = $("#submission");
+      
+      // -- Clean Up Previous and Display Duplicate Saves / Submissions -- //
+      _ctrl.find(".action").parent().find(".glyphicon").remove();
+      _ctrl.find(".action").prop("disabled", true).addClass("high-dim");
+      
+	  var _spin = new Spinner(spin_small).spin();
+	  this.appendChild(_spin.el);
+            
+      var _value = getDataFromForm($("form"));
+       
+       google.script.run
+          .withSuccessHandler(function(value) {
+          
+            // -- Stop Spinning & Re-Enabled Buttons -- //
+            if (_spin) _spin.stop();
+			_ctrl.find(".action").prop("disabled", false).removeClass("high-dim");
+                
+            if (value === true) {
+          
+              // -- Show Success -- //
+              if (__debug) console.log("SAVE FORM SUCCEEDED");
+              $("<span />").addClass("status glyphicon glyphicon-ok success-icon").insertAfter(_ctrl.find("#submit"));
+              _ctrl.find(".panel").removeClass("panel-primary").addClass("panel-success");
+              
+              
+            } else {
+              
+              // -- Show Failure -- //
+              if (__debug) console.log("SAVE FORM FAILED");
+              $("<span />", {title : JSON.stringify(value)})
+                .addClass("status glyphicon glyphicon-remove failure-icon").insertAfter(_ctrl.find("#submit"));
+              
+            }
+            
+          })
+          .withFailureHandler(function(err) {
+          
+            // -- Stop Spinning & Re-Enabled Buttons -- //
+            if (_spin) _spin.stop();
+			_ctrl.find(".action").prop("disabled", false).removeClass("high-dim");
+            
+            // -- Show Failure -- //
+            if (__debug) {
+              console.log("SAVE FORM FAILED");
+              console.log(err);
+            }
+            
+            $("<span />", {title : JSON.stringify(err)}).addClass("status glyphicon glyphicon-remove failure-icon")
+              .insertAfter(_ctrl.find("#submit"));
+          
+          })
+          .save_form(__token, __organisation, _value);
+	});
+    
+    $("#submission #submit").click(function(e) {
+      
+      e.preventDefault();
+      var _ctrl = $("#submission");
+      
+      _ctrl.find("input, textarea").removeClass("error").prop("title", "");
+      
+      // -- Clean Up Previous and Display Duplicate Saves / Submissions -- //
+      _ctrl.find(".action").parent().find(".glyphicon").remove();
+      
+      // -- Check Form Validity First -- //
+      var _form = _ctrl.closest("form");
+      
+      if (( typeof(_form[0].checkValidity) == "function" ) && !_form[0].checkValidity()) {
+        
+          // -- Invalid Form -- //
+          if (__debug) console.log("FORM INVALID");
+          $("<input type='submit'>").hide().appendTo(_form).click().remove();
+          return;
+          
+      }
+        
+      if (_ctrl.find(".pre_submit").is(":visible")) {
+        
+        var _declaration = $("#submission_declaration").val();
+        if (!_declaration) {$("#submission_confirmation, #submission_declaration").addClass("error").prop("title", "Please Fill in this Field"); return;}
+        
+        var _name = $("#submission_name").val();
+        if (!_name) {$("#submission_name").addClass("error").prop("title", "Please Fill in this Field"); return;}
+        
+        var _next = $("#submission_next").val();
+        if (!_next) {$("#submission_next").addClass("error").prop("title", "Please Fill in this Field"); return;}
+
+        var _spin = new Spinner(spin_small).spin();
+	    this.appendChild(_spin.el);
+
+        var _value = getDataFromForm(_form);
+        
+        // Submit Form
+        google.script.run
+          .withSuccessHandler(function(value) {
+          
+            // -- Stop Spinning & Re-Enabled Buttons -- //
+            if (_spin) _spin.stop();
+			_ctrl.find(".action").prop("disabled", false).removeClass("high-dim");
+                
+            if (value === true) {
+          
+              // -- Show Success -- //
+              if (__debug) console.log("SUBMIT FORM SUCCEEDED");
+              $("<span />").addClass("status glyphicon glyphicon-ok success-icon").insertAfter(_ctrl.find("#submit"));
+              _ctrl.find(".panel").removeClass("panel-primary").addClass("panel-success");
+              
+              // -- Hide Form -- //
+              $("fieldset.data").fadeOut("slow");
+              _ctrl.find(".action").prop("disabled", true);
+              
+            } else {
+              
+              // -- Show Failure -- //
+              if (__debug) console.log("SUBMIT FORM FAILED");
+              $("<span />", {title : JSON.stringify(value)})
+                .addClass("status glyphicon glyphicon-remove failure-icon").insertAfter(_ctrl.find("#submit"));
+              
+            }
+            
+          })
+          .withFailureHandler(function(err) {
+          
+            // -- Stop Spinning & Re-Enabled Buttons -- //
+            if (_spin) _spin.stop();
+			_ctrl.find(".action").prop("disabled", false).removeClass("high-dim");
+            
+            // -- Show Failure -- //
+            if (__debug) {
+              console.log("SUBMIT FORM FAILED");
+              console.log(err);
+            }
+            
+            $("<span />", {title : JSON.stringify(err)}).addClass("status glyphicon glyphicon-remove failure-icon")
+              .insertAfter(_ctrl.find("#submit"));
+          
+          })
+          .submit_form(__token, __organisation, __user, _next, _value);
+      
+      } else {
+
+        _ctrl.find(".panel-title").text("Authorise Form");
+        _ctrl.find(".panel").removeClass("panel-primary").addClass("panel-danger");
+        _ctrl.find(".pre_submit").delay(200).fadeIn();
+  
+      }
+      
+	});
+    // -- Form Process Save / Submit Methods -- //
+    
+  });
+
+</script>

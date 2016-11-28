@@ -1,0 +1,136 @@
+// -- Default Fields -- //
+var COL_KEY = "Key";
+var COL_FIELD = "Field";
+var COL_VALUE = "Value";
+var COL_ORDER = "Order";
+var COL_DISPLAY = "Display";
+
+function hydrate_all_data(id, entity, organisation, _config, _displayOnly) {
+ 
+  var _db = get_db(id, entity, organisation, config);
+  if (_db) {
+    
+    var _ret = {}
+    
+    var _sheets = _db.getSheets();
+    for (var i = 0; i < _sheets.length; i++) {
+      
+      _ret[_sheets[i].getName()] = _hydrate_data(_sheets[i], _displayOnly);
+        
+    }
+    
+    return _ret;
+  }
+  
+}
+
+function hydrate_data(id, form, entity, organisation, _config, _displayOnly) {
+
+  var _db = get_form_db(id, form, entity, organisation, _config, false)
+  if (_db) {
+    return _hydrate_data(_db, _displayOnly);
+  } else {
+    return;
+  }
+  
+}
+
+function _hydrate_data(_db, _displayOnly) {
+
+  var _ret = {};
+ 
+  // Check to see if the sheet is empty, if it is, return.
+  if (_db.getLastColumn() == 0 || _db.getLastRow() == 0) return;
+    
+  // Hydrate the data.
+  var _headers = _db.getRange(1, 1, 1, _db.getLastColumn()).getValues()[0];
+  var _data = _db.getRange(2, 1, _db.getLastRow(), _db.getLastColumn()).getValues();
+      
+  var key_Index = _headers.indexOf(COL_KEY);
+  var field_Index = _headers.indexOf(COL_FIELD);
+  var value_Index = _headers.indexOf(COL_VALUE);
+  var order_Index = _headers.indexOf(COL_ORDER);
+  var display_Index = _headers.indexOf(COL_DISPLAY);
+      
+    for (var i = 0; i < _data.length; i++) {
+        
+      if (_data[i][key_Index]) {
+          
+        var _obj = {};
+        var _key = JSON.parse(_data[i][key_Index]);
+          
+        // -- Defaults -- //
+        if (_data[i][field_Index]) _obj[COL_FIELD] = JSON.parse(_data[i][field_Index]);
+        if (_data[i][value_Index]) _obj[COL_VALUE] = JSON.parse(_data[i][value_Index]);
+        if (_data[i][order_Index]) _obj[COL_ORDER] = JSON.parse(_data[i][order_Index]);
+          
+        // -- Extras -- //
+        for (var j = 0; j < _headers.length; j++) {
+          if (_headers[j]) {
+            var _header = _headers[j];
+            if (_header && _header !== COL_KEY && _header !== COL_FIELD && _header !== COL_VALUE && _header !== COL_ORDER && _data[i][j]) 
+              _obj[_header] = JSON.parse(_data[i][j]);
+          }
+        }
+          
+        if (!_displayOnly || _obj[COL_DISPLAY]) _ret[_key] = _obj;
+          
+      }
+    
+    }
+  
+  return _ret;
+  
+}
+
+
+function get_form_db(id, form, entity, organisation, config, create) {
+  var _db = get_db(id, entity, organisation, config);
+  if (_db) {
+    var _sheet, _sheets = _db.getSheets();
+    for (var i = 0; i < _sheets.length; i++) {
+      if (_sheets[i].getName() == form) return _sheets[i];
+    }
+    if (create) {
+      if (_db.getSheets().length == 1 && _db.getSheets()[0].getName() == "Sheet1") {
+        return _db.getSheets()[0].setName(form);
+      } else {
+        return _db.insertSheet(form);
+      }
+    }
+  }
+}
+
+
+function get_db(id, entity, organisation, config) {
+   var prop_Key = __config.APPLICATION.split(" ").join("_").toUpperCase();
+   var prop_Value = id;
+    
+   var _queryVal = "mimeType = 'application/vnd.google-apps.spreadsheet' and trashed != true and properties has { key='" +
+     prop_Key + "' and value='" + prop_Value + "' and visibility='PUBLIC' }";
+    
+   var _query = Drive.Files.list({orderBy : "title", q : _queryVal});
+   var _results = _query.items;
+  
+   if (!_results || _results.length == 0) {
+    
+     var _schools = getSingleSheet(config.DATABASES.MASTER, "Schools");
+     var _row = getMatchingRow(_schools, "CODE", organisation);
+     if (_row) {
+       var _folder = _row.FOLDER ? DriveApp.getFolderById(getDriveId(_row.FOLDER)) : DriveApp.getRootFolder();
+       var _sheet = SpreadsheetApp.create(entity + " [" + organisation + "]");
+       var _data_Obj = Objects().fetch(_sheet.getId());
+       _data_Obj.move(_folder.getId());
+       _data_Obj.setProperty(_folder.getId());
+       _data_Obj.setProperty(prop_Key, prop_Value, _data_Obj.Property_Visibility.PUBLIC);
+              
+       return _sheet;
+     }
+     
+   } else if (_results && _results.length > 0) {
+      try {
+        return SpreadsheetApp.openById(_results[0].id);
+      } catch(err) {
+      }
+   }
+}

@@ -1,0 +1,6 @@
+function run_Setup() {
+  var ID_OF_MASTER_DB_SPREADSHEET = "";
+  setMasterDB(ID_OF_MASTER_DB_SPREADSHEET);
+  var _c = config(true);
+  Logger.log(JSON.stringify(config()));
+}
